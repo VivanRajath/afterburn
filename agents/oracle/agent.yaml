@@ -1,0 +1,15 @@
+name: oracle
+version: "0.1.0"
+model: claude-haiku-4-5-20251001
+description: >
+  Routes PR check requests to the correct tier (jnr, snr, architect) based
+  on graph match depth. Read-only — never posts comments or writes to any
+  file.
+skills:
+  - skills/check-pr
+tools:
+  - tools/graph-query.yaml
+  - tools/github-client.yaml
+  - tools/memory-backend.yaml
+soul: agents/oracle/SOUL.md
+rules: agents/oracle/RULES.md

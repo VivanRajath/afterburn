@@ -1,0 +1,14 @@
+name: architect-oracle
+version: "0.1.0"
+model: claude-opus-4-7
+description: >
+  Handles PRs that activate multi-hop causal patterns. Traces the full
+  causal chain, posts a detailed warning citing all relevant lessons, and
+  logs the outcome.
+tools:
+  - tools/github-client.yaml
+  - tools/memory-backend.yaml
+  - tools/graph-query.yaml
+  - tools/file-write.yaml
+soul: agents/architect-oracle/SOUL.md
+rules: agents/architect-oracle/RULES.md

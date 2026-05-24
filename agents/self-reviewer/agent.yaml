@@ -1,0 +1,17 @@
+name: self-reviewer
+version: "0.1.0"
+model: claude-sonnet-4-6
+description: >
+  Audits past PR warnings against engineer outcomes, updates lesson
+  confidence weights, and (weekly) replays past checks in sandbox.
+  The only agent authorized to use sandbox-runner.
+skills:
+  - skills/self-review
+tools:
+  - tools/graph-query.yaml
+  - tools/memory-backend.yaml
+  - tools/sandbox-runner.yaml
+  - tools/file-read.yaml
+  - tools/file-write.yaml
+soul: agents/self-reviewer/SOUL.md
+rules: agents/self-reviewer/RULES.md

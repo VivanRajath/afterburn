@@ -1,0 +1,14 @@
+name: ingestor
+version: "0.1.0"
+model: claude-haiku-4-5-20251001
+description: >
+  Fetches raw incident text from GitHub or uploaded files and saves it
+  to the memory backend. Does not interpret content.
+skills:
+  - skills/ingest-incident
+tools:
+  - tools/file-read.yaml
+  - tools/github-client.yaml
+  - tools/memory-backend.yaml
+soul: agents/ingestor/SOUL.md
+rules: agents/ingestor/RULES.md

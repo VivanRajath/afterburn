@@ -1,0 +1,13 @@
+name: extractor
+version: "0.1.0"
+model: claude-sonnet-4-6
+description: >
+  Parses raw incident text and extracts a structured list of nodes and
+  edges conforming to knowledge/schema/. Does not write to the graph.
+skills:
+  - skills/extract-ontology
+tools:
+  - tools/file-read.yaml
+  - tools/ontology-extractor.yaml
+soul: agents/extractor/SOUL.md
+rules: agents/extractor/RULES.md

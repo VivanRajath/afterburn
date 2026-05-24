@@ -1,0 +1,15 @@
+name: cartographer
+version: "0.1.0"
+model: claude-sonnet-4-6
+description: >
+  Merges extracted nodes and edges into the causal graph, detects pattern
+  candidates, and writes the updated graph atomically. Must be safe to call
+  repeatedly — reconciliation is idempotent.
+skills:
+  - skills/reconcile-graph
+tools:
+  - tools/file-read.yaml
+  - tools/file-write.yaml
+  - tools/graph-query.yaml
+soul: agents/cartographer/SOUL.md
+rules: agents/cartographer/RULES.md

@@ -1,0 +1,12 @@
+name: snr-oracle
+version: "0.1.0"
+model: claude-sonnet-4-6
+description: >
+  Handles PRs that match 1-2 past incidents or touch a hot-zone file.
+  Posts a warning comment citing the relevant lesson and logs the outcome.
+tools:
+  - tools/github-client.yaml
+  - tools/memory-backend.yaml
+  - tools/file-write.yaml
+soul: agents/snr-oracle/SOUL.md
+rules: agents/snr-oracle/RULES.md
