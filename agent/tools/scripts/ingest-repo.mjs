@@ -15,6 +15,50 @@ const PM_DIRS = new Set(['post-mortems', 'postmortems', 'incidents', 'post_morte
 const PM_NAME_RE = /incident|postmortem|post-mortem|outage/i;
 const PM_EXACT = new Set(['INCIDENTS.md', 'POSTMORTEMS.md', 'INCIDENT.md']);
 
+// ─── ID normalization ─────────────────────────────────────────────────────────
+function slugify(s) {
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .replace(/-{2,}/g, '-');
+}
+
+function canonicalId(rawId) {
+  if (!rawId || typeof rawId !== 'string') return rawId;
+  const id = rawId.trim();
+  const colonIdx = id.indexOf(':');
+  if (colonIdx === -1) return slugify(id);
+  const prefix = id.slice(0, colonIdx).toLowerCase();
+  const rest = id.slice(colonIdx + 1);
+  return `${prefix}:${slugify(rest)}`;
+}
+
+// Re-normalize IDs in an already-loaded graph and fix up edge references
+function normalizeGraph(graph) {
+  const idMap = new Map();
+  for (const node of graph.nodes) {
+    const canonical = canonicalId(node.id);
+    if (canonical !== node.id) {
+      idMap.set(node.id, canonical);
+      node.id = canonical;
+    }
+  }
+  if (idMap.size > 0) {
+    for (const edge of graph.edges) {
+      if (idMap.has(edge.source)) edge.source = idMap.get(edge.source);
+      if (idMap.has(edge.target)) edge.target = idMap.get(edge.target);
+    }
+  }
+  // Deduplicate nodes that collide after normalization
+  const seen = new Set();
+  graph.nodes = graph.nodes.filter((n) => {
+    if (seen.has(n.id)) return false;
+    seen.add(n.id);
+    return true;
+  });
+}
+
 // ─── CLI arg parsing ──────────────────────────────────────────────────────────
 function parseArgs() {
   const args = process.argv.slice(2);
@@ -87,15 +131,30 @@ async function scanForPostMortems(dir, rootDir, found = []) {
 
 // ─── graph merge helpers ──────────────────────────────────────────────────────
 function mergeGraph(base, incoming) {
+  // Normalize all incoming IDs before merging
+  for (const node of incoming.nodes ?? []) {
+    node.id = canonicalId(node.id);
+  }
+  for (const edge of incoming.edges ?? []) {
+    edge.source = canonicalId(edge.source);
+    edge.target = canonicalId(edge.target);
+  }
+
   const nodeIds = new Set(base.nodes.map((n) => n.id));
-  const edgeKeys = new Set(
-    base.edges.map((e) => `${e.source}|${e.target}|${e.type}`),
-  );
+  const edgeKeys = new Set(base.edges.map((e) => `${e.source}|${e.target}|${e.type}`));
+  let dedupCount = 0;
 
   for (const node of incoming.nodes ?? []) {
     if (!nodeIds.has(node.id)) {
       base.nodes.push(node);
       nodeIds.add(node.id);
+    } else {
+      // Merge properties: existing first, incoming wins on conflict
+      const existing = base.nodes.find((n) => n.id === node.id);
+      if (existing && node.properties) {
+        existing.properties = { ...(existing.properties ?? {}), ...node.properties };
+      }
+      dedupCount++;
     }
   }
 
@@ -106,6 +165,8 @@ function mergeGraph(base, incoming) {
       edgeKeys.add(key);
     }
   }
+
+  return dedupCount;
 }
 
 // ─── post-processing ──────────────────────────────────────────────────────────
@@ -214,9 +275,13 @@ async function main() {
     graph = JSON.parse(raw);
   } catch { /* start fresh if graph doesn't exist */ }
 
+  // Normalize any un-canonical IDs written by prior runs
+  normalizeGraph(graph);
+
   // Extract ontology from each file
   let nodesCreated = 0;
   let edgesCreated = 0;
+  let nodesDeduplicated = 0;
   const processedFiles = [];
 
   for (let i = 0; i < files.length; i++) {
@@ -247,14 +312,39 @@ async function main() {
 
     const beforeNodes = graph.nodes.length;
     const beforeEdges = graph.edges.length;
-    mergeGraph(graph, extracted);
+    const dedup = mergeGraph(graph, extracted);
     nodesCreated += graph.nodes.length - beforeNodes;
     edgesCreated += graph.edges.length - beforeEdges;
+    nodesDeduplicated += dedup;
     processedFiles.push(rel);
   }
 
   // Post-processing
   applyPostProcessing(graph);
+
+  // ── Dangling edge filter ──
+  const nodeIds = new Set(graph.nodes.map((n) => n.id));
+  const validEdges = [];
+  const droppedEdges = [];
+  for (const edge of graph.edges) {
+    if (nodeIds.has(edge.source) && nodeIds.has(edge.target)) {
+      validEdges.push(edge);
+    } else {
+      droppedEdges.push({
+        source: edge.source,
+        target: edge.target,
+        type: edge.type,
+        missing: !nodeIds.has(edge.source) ? edge.source : edge.target,
+      });
+    }
+  }
+  graph.edges = validEdges;
+  if (droppedEdges.length > 0) {
+    console.error(`[merge] dropped ${droppedEdges.length} dangling edges:`);
+    for (const d of droppedEdges) {
+      console.error(`  ${d.source} -[${d.type}]-> ${d.target}  (missing: ${d.missing})`);
+    }
+  }
 
   // Write graph
   graph.updated_at = new Date().toISOString();
@@ -277,6 +367,8 @@ async function main() {
     files: processedFiles,
     nodes_created: nodesCreated,
     edges_created: edgesCreated,
+    nodes_deduplicated: nodesDeduplicated,
+    dangling_edges_dropped: droppedEdges.length,
     band_aid_count,
     hot_zone_count,
     duration_ms: Date.now() - start,

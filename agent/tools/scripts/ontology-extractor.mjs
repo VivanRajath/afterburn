@@ -27,6 +27,21 @@ ID formats:
 CRITICAL: code-path ids use raw file paths — do NOT slugify (e.g. code-path:src/payments/handler.py)
 Return ONLY valid JSON: {"nodes":[{"id","type","properties"}],"edges":[{"source","target","type"}]}`;
 
+async function callWithRetry(fetchFn, maxRetries = 3) {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    const res = await fetchFn();
+    if (res.status === 429) {
+      const retryAfter = parseInt(res.headers.get('retry-after') || '30', 10);
+      const waitMs = retryAfter * 1000;
+      console.error(`[429] attempt ${attempt + 1}/${maxRetries}: waiting ${waitMs}ms before retry`);
+      await new Promise((r) => setTimeout(r, waitMs));
+      continue;
+    }
+    return res;
+  }
+  throw new Error('rate-limit-exceeded-max-retries');
+}
+
 export async function run({ raw_text, incident_id }) {
   const provider = (process.env.LLM_PROVIDER ?? 'anthropic').toLowerCase();
   const cfg = PROVIDERS[provider];
@@ -50,7 +65,7 @@ export async function run({ raw_text, incident_id }) {
       messages: [{ role: 'system', content: SYSTEM }, { role: 'user', content: userMsg }] });
   }
 
-  const res = await fetch(cfg.url, { method: 'POST', headers: reqHeaders, body: reqBody });
+  const res = await callWithRetry(() => fetch(cfg.url, { method: 'POST', headers: reqHeaders, body: reqBody }));
   if (!res.ok) throw new Error(`${provider} API ${res.status}: ${await res.text()}`);
   const data = await res.json();
 
