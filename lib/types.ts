@@ -35,6 +35,7 @@ export interface CheckResult {
   tier?: string;
   warning?: string;
   lessons_cited?: string[];
+  matched_node_ids?: string[];
   model_used?: string;
   elapsed_ms?: number;
   error?: string;

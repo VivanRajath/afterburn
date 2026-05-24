@@ -8,6 +8,10 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import { spawn } from 'child_process';
 
+function slugify(s: string) {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').replace(/-{2,}/g, '-');
+}
+
 const PROVIDER_KEY: Record<string, string> = {
   anthropic: 'ANTHROPIC_API_KEY',
   openai: 'OPENAI_API_KEY',
@@ -83,12 +87,27 @@ export async function POST(req: NextRequest) {
 
   let tier = 'jnr';
   let lessons_cited: string[] = [];
+  let matched_node_ids: string[] = [];
 
   if (parts[1]) {
     try {
       const result = JSON.parse(parts[1].trim());
       tier = result.tier ?? tier;
       lessons_cited = result.lessons_cited ?? lessons_cited;
+
+      const matched = new Set<string>();
+      for (const id of result.incidents_matched ?? []) matched.add(id);
+      for (const inc of result.incidents ?? []) {
+        for (const p of inc.touched_paths ?? []) matched.add(`code-path:${p}`);
+      }
+      for (const hz of result.hot_zones ?? []) {
+        if (hz.code_path) matched.add(hz.code_path);
+      }
+      for (const pat of result.patterns ?? []) {
+        if (pat.id) matched.add(pat.id);
+      }
+      for (const f of result.changed_files ?? []) matched.add(`code-path:${slugify(f)}`);
+      matched_node_ids = [...matched];
     } catch {
       // leave defaults
     }
@@ -98,6 +117,7 @@ export async function POST(req: NextRequest) {
     warning: warningText,
     tier,
     lessons_cited,
+    matched_node_ids,
     model_used: provider,
     elapsed_ms,
   });

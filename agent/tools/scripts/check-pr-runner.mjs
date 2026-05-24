@@ -72,7 +72,8 @@ export async function run({ diff_path }) {
 
   if (tier === 'jnr') {
     return { tier, warning: null, posted: false, lessons_cited: [],
-             log_entry: `No incident history on: ${changed_files.join(', ')}` };
+             log_entry: `No incident history on: ${changed_files.join(', ')}`,
+             changed_files, incidents: [], hot_zones: [], patterns: [] };
   }
 
   // Step 4 — format warning and post to stdout (demo mode)
@@ -87,6 +88,8 @@ export async function run({ diff_path }) {
     incidents_matched: incidents.map(i => i.id),
     hot_zones,
     patterns,
+    changed_files,
+    incidents,
   };
 }
 

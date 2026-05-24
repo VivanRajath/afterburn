@@ -28,9 +28,10 @@ interface GraphViewProps {
   graphData: GraphData | null;
   selectedNodeId: string | null;
   onSelectNode: (id: string | null) => void;
+  highlightedNodeIds?: string[];
 }
 
-export default function GraphView({ graphData, selectedNodeId, onSelectNode }: GraphViewProps) {
+export default function GraphView({ graphData, selectedNodeId, onSelectNode, highlightedNodeIds }: GraphViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [graphWidth, setGraphWidth] = useState(700);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
@@ -54,14 +55,27 @@ export default function GraphView({ graphData, selectedNodeId, onSelectNode }: G
     };
   }, [graphData]);
 
+  const highlightSet = useMemo(() => {
+    if (!highlightedNodeIds || highlightedNodeIds.length === 0 || !graphData) return null;
+    const graphNodeIds = new Set(graphData.nodes.map((n) => n.id));
+    const active = new Set(highlightedNodeIds.filter((id) => graphNodeIds.has(id)));
+    return active.size > 0 ? active : null;
+  }, [highlightedNodeIds, graphData]);
+
   const paintNode = useCallback(
     (rawNode: object, ctx: CanvasRenderingContext2D, globalScale: number) => {
       const node = rawNode as GraphNode & { x: number; y: number };
-      const size = node.val ?? 4;
+      const baseSize = node.val ?? 4;
       const color = GROUP_COLORS[node.group] ?? '#6b7280';
       const isHovered = hoveredNodeId === node.id;
       const isSelected = selectedNodeId === node.id;
       const isBandAid = node.properties?.band_aid_candidate === true;
+      const isHighlighted = highlightSet === null || highlightSet.has(node.id);
+
+      const opacity = isHighlighted ? 1 : 0.25;
+      const size = isHighlighted && highlightSet !== null ? baseSize * 1.2 : baseSize;
+
+      ctx.globalAlpha = opacity;
 
       // Glow for selected
       if (isSelected) {
@@ -87,6 +101,7 @@ export default function GraphView({ graphData, selectedNodeId, onSelectNode }: G
       }
 
       ctx.shadowBlur = 0;
+      ctx.globalAlpha = 1;
 
       // Label on hover or selection
       if (isHovered || isSelected) {
@@ -108,7 +123,7 @@ export default function GraphView({ graphData, selectedNodeId, onSelectNode }: G
         ctx.fillText(label, node.x, node.y + size + 2 / globalScale + pad);
       }
     },
-    [hoveredNodeId, selectedNodeId],
+    [hoveredNodeId, selectedNodeId, highlightSet],
   );
 
   const bandAidCount = graphData?.nodes.filter(
@@ -158,8 +173,20 @@ export default function GraphView({ graphData, selectedNodeId, onSelectNode }: G
               onNodeHover={(node) =>
                 setHoveredNodeId(node ? (node as GraphNode).id : null)
               }
-              linkColor={() => '#334155'}
-              linkWidth={1.2}
+              linkColor={(link) => {
+                if (!highlightSet) return '#334155';
+                const { source, target } = link as { source: string | GraphNode; target: string | GraphNode };
+                const srcId = typeof source === 'string' ? source : source.id;
+                const tgtId = typeof target === 'string' ? target : target.id;
+                return highlightSet.has(srcId) && highlightSet.has(tgtId) ? '#334155' : 'rgba(51,65,85,0.15)';
+              }}
+              linkWidth={(link) => {
+                if (!highlightSet) return 1.2;
+                const { source, target } = link as { source: string | GraphNode; target: string | GraphNode };
+                const srcId = typeof source === 'string' ? source : source.id;
+                const tgtId = typeof target === 'string' ? target : target.id;
+                return highlightSet.has(srcId) && highlightSet.has(tgtId) ? 1.8 : 0.5;
+              }}
               linkLabel={(l) => (l as { type: string }).type}
               linkDirectionalArrowLength={4}
               linkDirectionalArrowRelPos={1}

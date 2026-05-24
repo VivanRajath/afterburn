@@ -5,6 +5,10 @@ import { join, dirname } from 'node:path';
 const __dir = dirname(fileURLToPath(import.meta.url));
 const GRAPH_PATH = join(__dir, '..', '..', 'knowledge', 'incident-graph.json');
 
+function slugify(s) {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').replace(/-{2,}/g, '-');
+}
+
 async function loadGraph() {
   return JSON.parse(await readFile(GRAPH_PATH, 'utf8'));
 }
@@ -17,8 +21,11 @@ export async function run({ operation, files }) {
   const graph = await loadGraph();
   const nodeById = Object.fromEntries(graph.nodes.map(n => [n.id, n]));
 
-  // Normalise: accept bare file paths OR code-path: prefixed IDs
-  const targetIds = new Set(files.map(f => f.startsWith('code-path:') ? f : `code-path:${f}`));
+  // Normalise: accept bare file paths OR code-path: prefixed IDs, slugify to match graph node IDs
+  const targetIds = new Set(files.map(f => {
+    if (f.startsWith('code-path:')) return f;
+    return `code-path:${slugify(f)}`;
+  }));
 
   // All "touched" edges whose target is one of our files
   const touchedEdges = graph.edges.filter(e => e.type === 'touched' && targetIds.has(e.target));

@@ -50,6 +50,7 @@ export default function Page() {
           graphData={graphData}
           selectedNodeId={selectedNodeId}
           onSelectNode={setSelectedNodeId}
+          highlightedNodeIds={lastCheckResult?.matched_node_ids}
         />
 
         <AskAfterburn
