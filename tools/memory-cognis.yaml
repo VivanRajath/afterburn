@@ -1,0 +1,92 @@
+name: memory-cognis
+version: "0.1.0"
+description: >
+  Cognis adapter for the memory backend interface. Default and recommended
+  backend. Invokes the Cognis skill, which handles all HTTP and semantic
+  ranking internally. Skills and sub-agents never reference this file
+  directly — all calls go through tools/memory-backend.yaml.
+implements: tools/memory-backend.yaml
+
+# The Cognis skill must be installed before this adapter can be used.
+installation:
+  command: npx skills add Lyzr-Cognis/cognis-skills
+
+# The three env vars documented in the Cognis README. No others.
+config:
+  LYZR_API_KEY:
+    required: true
+    description: Lyzr platform API key.
+  COGNIS_OWNER_ID:
+    required: true
+    description: Owner identity for scoping memory. Defaults to $(whoami).
+    default: "$(whoami)"
+  COGNIS_API_URL:
+    required: false
+    description: Cognis API base URL.
+    default: https://memory.studio.lyzr.ai
+
+# afterburn ingests team-shared incidents, so the default scope for all
+# writes is team. Override to personal by setting metadata.shared == false.
+default_scope: team
+scope_override_field: metadata.shared  # false → personal scope
+
+method_mapping:
+  save_incident:
+    description: >
+      Dispatches a save-memory instruction to the Cognis skill with the
+      raw incident text and metadata as structured context. Scope is team
+      by default; personal if metadata.shared == false.
+    skill_instruction: save-memory
+    payload_fields: [id, raw_text, metadata]
+
+  save_lesson:
+    description: >
+      Dispatches a save-memory instruction to the Cognis skill with the
+      distilled lesson text and tags as structured context. Scope is team
+      by default; personal if metadata.shared == false.
+    skill_instruction: save-memory
+    payload_fields: [id, distilled_text, tags]
+
+  search:
+    description: >
+      Dispatches a search-memory instruction to the Cognis skill with the
+      query string and scope. Returns results ordered by relevance.
+      Semantic ranking is performed server-side by Cognis; ranking
+      strategy is opaque to this adapter.
+    skill_instruction: search-memory
+    # The adapter normalises whatever relevance signal Cognis returns to
+    # the 0.0–1.0 score range required by the memory-backend interface.
+    score_normalisation: adapter_normalises_to_0_1
+
+  get:
+    description: >
+      Dispatches a get-memory instruction to the Cognis skill with the
+      stored_id. Returns the full record if found, null record if not.
+    skill_instruction: get-memory
+
+  list:
+    description: >
+      Dispatches a list-memory instruction to the Cognis skill with the
+      scope and cursor. Returns metadata-only records in stable order.
+    skill_instruction: list-memory
+    # cursor encodes the Cognis skill's page token (opaque to this adapter)
+    cursor_encoding: Cognis skill page token
+
+error_handling:
+  auth_failure: surface_to_operator   # bad LYZR_API_KEY will not self-heal
+  skill_not_installed:
+    action: surface_to_operator
+    hint: Run `npx skills add Lyzr-Cognis/cognis-skills` and retry.
+  transient_error:
+    retry: true
+    max_attempts: 3
+    backoff: exponential
+
+notes:
+  - This adapter is a contract against the documented Cognis public surface
+    only: the three env vars above and the Agent Skills invocation model.
+  - Any behavior beyond what the Cognis README documents is out of scope.
+    Do not extend this adapter based on assumptions about internal Cognis
+    HTTP endpoints, request schemas, or response shapes.
+  - If the Cognis API surface expands (new env vars, new skill instructions,
+    new scope types), update this file and this file only.

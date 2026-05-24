@@ -1,0 +1,178 @@
+name: memory-backend
+version: "0.1.0"
+description: >
+  The memory backend interface contract. Every memory operation in afterburn
+  goes through this tool. Skills and sub-agents call this interface only —
+  never an adapter directly. The active adapter is selected at runtime via
+  the AFTERBURN_MEMORY_BACKEND environment variable.
+
+# The five methods that every adapter must implement identically.
+# No adapter may add, remove, or rename a method.
+interface:
+  - name: save_incident
+    description: >
+      Persist raw incident text under the raw-incidents scope.
+      Called only by the ingestor sub-agent.
+    inputs:
+      id:
+        type: string
+        required: true
+        description: Unique incident identifier (e.g. INC-2024-001).
+      raw_text:
+        type: string
+        required: true
+        description: Full unmodified post-mortem text.
+      metadata:
+        type: object
+        required: true
+        # Required metadata fields enforced by every adapter
+        fields:
+          source:
+            type: string
+            description: Origin URL or file path of the post-mortem.
+          ingested_at:
+            type: string
+            format: iso8601_utc
+          agent:
+            type: string
+            description: Sub-agent name that called save_incident.
+    outputs:
+      stored_id:
+        type: string
+        description: Confirmed storage identifier. May differ from input id.
+      backend:
+        type: string
+        description: Name of the adapter that handled the write.
+
+  - name: save_lesson
+    description: >
+      Persist a distilled lesson under the lessons scope.
+      Called only by the scribe sub-agent.
+    inputs:
+      id:
+        type: string
+        required: true
+        description: Unique lesson identifier (e.g. LES-2024-001).
+      distilled_text:
+        type: string
+        required: true
+        description: Concise, searchable lesson derived from one or more incidents.
+      tags:
+        type: array
+        items: string
+        required: true
+        # Minimum required tags enforced by every adapter
+        required_tags: [incident_id, services, root_cause, confidence]
+        description: >
+          confidence must be a float 0.0–1.0. services is a comma-separated
+          list of service names.
+    outputs:
+      stored_id:
+        type: string
+      backend:
+        type: string
+
+  - name: search
+    description: >
+      Search the memory backend for incidents or lessons matching a query.
+      Used by the oracle family to find historical evidence for PR checks.
+    inputs:
+      query:
+        type: string
+        required: true
+        description: Natural-language or keyword query.
+      scope:
+        type: string
+        required: true
+        enum: [incidents, lessons, all]
+        description: Which partition of the backend to search.
+      limit:
+        type: integer
+        required: false
+        default: 10
+        description: Maximum results to return. Capped at 50 by all adapters.
+    outputs:
+      results:
+        type: array
+        description: >
+          Ordered by relevance score descending. Each element contains:
+          id (string), score (float 0.0–1.0), snippet (string, ≤ 300 chars),
+          metadata (object).
+      backend:
+        type: string
+
+  - name: get
+    description: >
+      Retrieve a single incident or lesson by its stored identifier.
+    inputs:
+      id:
+        type: string
+        required: true
+        description: The stored_id returned by save_incident or save_lesson.
+    outputs:
+      record:
+        type: object
+        description: >
+          Full record containing: id, scope (incidents|lessons), text,
+          metadata, stored_at (ISO 8601 UTC).
+      backend:
+        type: string
+
+  - name: list
+    description: >
+      Paginated listing of all records in a scope. Used by export-memory
+      to traverse the full corpus without relying on search semantics.
+      Returns records in stable insertion order; the cursor opaquely
+      encodes adapter-specific pagination state.
+    inputs:
+      scope:
+        type: string
+        required: true
+        enum: [incidents, lessons]
+        description: Which partition to list. Does not accept "all".
+      cursor:
+        type: string
+        required: false
+        description: >
+          Opaque pagination cursor. Pass null on the first call. Pass the
+          next_cursor from the previous response to advance the page.
+      limit:
+        type: integer
+        required: false
+        default: 100
+        description: Records per page. Capped at 500 by all adapters.
+    outputs:
+      records:
+        type: array
+        description: >
+          Ordered by stable insertion order. Each element contains:
+          id (string), metadata (object), scope (string). Body text is
+          not included — call get(id) for full content. This keeps the
+          list operation cheap and lets the exporter stream rather than
+          buffer.
+      next_cursor:
+        type: string_or_null
+        description: >
+          Pass to the next list call to advance. Null signals no more pages.
+          Cursor is opaque to the caller; each adapter encodes its own
+          pagination state.
+      backend:
+        type: string
+
+# Adapter registry. Each entry maps a backend name to its tool definition.
+# The exporter (skills/export-memory) depends only on this interface —
+# it must not import or reference any adapter's internals.
+adapters:
+  cognis:
+    tool: tools/memory-cognis.yaml
+    default: true
+  filesystem:
+    tool: tools/memory-filesystem.yaml
+  sqlite:
+    tool: tools/memory-sqlite.yaml
+  s3:
+    tool: tools/memory-s3.yaml
+
+# Set this env var to select the active adapter at runtime.
+# Valid values: cognis | filesystem | sqlite | s3
+runtime_selector: AFTERBURN_MEMORY_BACKEND

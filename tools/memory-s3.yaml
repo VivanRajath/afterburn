@@ -1,0 +1,76 @@
+name: memory-s3
+version: "0.1.0"
+description: >
+  S3 adapter for the memory backend interface. Enterprise blob storage.
+  Stores incidents and lessons as JSON objects in an S3-compatible bucket.
+  Search is powered by a local index file (also stored in S3) that is
+  downloaded at startup and refreshed after each write. Suitable for teams
+  who need durable, multi-region storage without a managed vector service.
+implements: tools/memory-backend.yaml
+
+config:
+  bucket_env: AFTERBURN_S3_BUCKET
+  region_env: AFTERBURN_S3_REGION
+  access_key_env: AWS_ACCESS_KEY_ID
+  secret_key_env: AWS_SECRET_ACCESS_KEY
+  # Optional: override endpoint for S3-compatible stores (MinIO, R2, etc.)
+  endpoint_url_env: AFTERBURN_S3_ENDPOINT
+  # Key prefixes within the bucket
+  prefix_incidents: afterburn/incidents/
+  prefix_lessons: afterburn/lessons/
+  # Search index object key (keyword index; downloaded at startup)
+  index_key: afterburn/index.json
+
+method_mapping:
+  save_incident:
+    operation: put_object
+    key: "{{ config.prefix_incidents }}{{ id }}.json"
+    # After write, updates the index object with a 300-char snippet
+    post_write: refresh_index
+
+  save_lesson:
+    operation: put_object
+    key: "{{ config.prefix_lessons }}{{ id }}.json"
+    post_write: refresh_index
+
+  search:
+    operation: keyword_scan
+    # Downloads index.json once per session; re-fetches if stale (> 5 min)
+    index_key: "{{ config.index_key }}"
+    cache_ttl_seconds: 300
+    # score = matching_query_terms / total_query_terms, normalised to 0.0–1.0
+    score_field: term_frequency_ratio
+    score_range: [0.0, 1.0]
+    note: >
+      S3 search is keyword-only against the cached index. For semantic
+      search, use the cognis adapter.
+
+  get:
+    operation: get_object
+    # Tries incidents prefix first, then lessons; infers scope from key path
+    key_candidates:
+      - "{{ config.prefix_incidents }}{{ id }}.json"
+      - "{{ config.prefix_lessons }}{{ id }}.json"
+
+  list:
+    operation: list_objects_v2
+    prefixes:
+      incidents: "{{ config.prefix_incidents }}"
+      lessons: "{{ config.prefix_lessons }}"
+    ordering: lexicographic by object key (matches insertion order for id-keyed objects)
+    # cursor encodes the S3 ListObjectsV2 ContinuationToken,
+    # passed back as NextContinuationToken by the S3 API
+    cursor_encoding: S3 ListObjectsV2 ContinuationToken
+
+error_handling:
+  # Surface auth errors immediately — bad credentials will not self-heal
+  auth_failure: surface_to_operator
+  transient_error:
+    retry: true
+    max_attempts: 3
+    backoff: exponential
+  object_not_found: return_null_record
+  # If index is missing, rebuild from a bucket list scan (slow; log warning)
+  index_missing:
+    action: rebuild_index_from_list
+    note: Lists all objects under prefix_incidents and prefix_lessons
