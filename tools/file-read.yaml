@@ -42,3 +42,7 @@ operations:
         type: object
       exists:
         type: boolean
+
+implementation:
+  script: scripts/file-read.mjs
+  runtime: node

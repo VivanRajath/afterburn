@@ -82,3 +82,7 @@ operations:
         description: >
           Matching Pattern nodes: id, label, pattern_type,
           associated_files[], incident_count, first_seen, last_seen.
+
+implementation:
+  script: scripts/graph-query.mjs
+  runtime: node

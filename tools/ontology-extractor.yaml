@@ -47,3 +47,7 @@ operations:
 schema_ref:
   nodes: knowledge/schema/nodes.yaml
   edges: knowledge/schema/edges.yaml
+
+implementation:
+  script: scripts/ontology-extractor.mjs
+  runtime: node

@@ -81,3 +81,7 @@ operations:
       commits:
         type: array
         description: "Commits touching this file: sha, message, date, author."
+
+implementation:
+  script: scripts/github-client.mjs
+  runtime: node

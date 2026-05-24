@@ -5,6 +5,8 @@ description: >
   appropriate oracle tier, post a warning if warranted, and log the outcome.
   The dispatch logic is the architectural centrepiece of this skill.
 license: MIT
+scripts:
+  - tools/scripts/check-pr-runner.mjs
 allowed-tools:
   - tools/graph-query.yaml
   - tools/github-client.yaml
