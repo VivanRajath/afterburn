@@ -1,0 +1,66 @@
+spec_version: "0.1.0"
+name: afterburn
+version: "0.1.0"
+description: >
+  Post-mortem to pre-mortem intelligence. Ingests incident post-mortems,
+  builds a causal knowledge graph, and surfaces historical warnings on
+  pull requests that touch the same failure patterns.
+author: afterburn contributors
+license: MIT
+
+model: claude-sonnet-4-6
+
+# Human entry point for operational guidance
+entrypoint: INSTRUCTIONS.md
+
+skills:
+  - skills/ingest-incident
+  - skills/extract-ontology
+  - skills/reconcile-graph
+  - skills/distill-lesson
+  - skills/check-pr
+  - skills/self-review
+  - skills/export-memory
+
+tools:
+  # Memory backend interface — all memory ops go through this contract
+  - tools/memory-backend.yaml
+  # Adapters (selected at runtime via AFTERBURN_MEMORY_BACKEND)
+  - tools/memory-cognis.yaml
+  - tools/memory-filesystem.yaml
+  - tools/memory-sqlite.yaml
+  - tools/memory-s3.yaml
+  # Operational primitives
+  - tools/ontology-extractor.yaml
+  - tools/graph-query.yaml
+  - tools/github-client.yaml
+  - tools/sandbox-runner.yaml
+  - tools/file-read.yaml
+  - tools/file-write.yaml
+
+sub_agents:
+  - agents/ingestor
+  - agents/extractor
+  - agents/cartographer
+  - agents/oracle
+  - agents/jnr-oracle
+  - agents/snr-oracle
+  - agents/architect-oracle
+  - agents/scribe
+  - agents/self-reviewer
+
+skillflows:
+  - skillflows/ingest-incident.yaml
+  - skillflows/pr-check.yaml
+  - skillflows/self-review.yaml
+  - skillflows/bootstrap-from-cognis.yaml
+
+runtime:
+  # Override default backend with env var AFTERBURN_MEMORY_BACKEND
+  memory_backend: memory-cognis
+  # HITL is non-negotiable: warnings only, no auto-blocking
+  hitl: true
+  hooks: hooks/hooks.yaml
+  scheduler: scheduler.yml
+  knowledge_root: knowledge/
+  log_level: info
