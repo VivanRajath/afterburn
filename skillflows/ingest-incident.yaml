@@ -1,0 +1,75 @@
+name: ingest-incident
+version: "0.1.0"
+description: >
+  Full ingestion pipeline: fetch raw post-mortem text, extract ontology,
+  merge into the causal graph, optionally distill a lesson, and log.
+  Data flows forward through outputs — no step re-reads from the backend
+  what a prior step already produced.
+
+trigger:
+  event: incident.created   # webhook payload must include incident_id and source
+  manual: true              # also invokable directly
+
+inputs:
+  incident_id:
+    type: string
+    required: true
+  source:
+    type: string
+    required: true
+    description: Local file path or GitHub URL of the post-mortem.
+  unconditional_lesson:
+    type: boolean
+    required: false
+    default: false
+    description: >
+      If true, distill-lesson runs regardless of whether reconcile-graph
+      reports a pattern flag. Default false gates lesson creation to
+      incidents that touch a flagged pattern.
+
+steps:
+  - id: ingest
+    skill: skills/ingest-incident
+    inputs:
+      incident_id: ${{ inputs.incident_id }}
+      source: ${{ inputs.source }}
+
+  - id: extract
+    skill: skills/extract-ontology
+    depends_on: [ingest]
+    inputs:
+      incident_id: ${{ inputs.incident_id }}
+      # raw_text forwarded from ingest — no backend re-read
+      raw_text: ${{ steps.ingest.outputs.raw_text }}
+
+  - id: reconcile
+    skill: skills/reconcile-graph
+    depends_on: [extract]
+    inputs:
+      incident_id: ${{ inputs.incident_id }}
+      extraction_id: ${{ steps.extract.outputs.extraction_id }}
+      nodes: ${{ steps.extract.outputs.nodes }}
+      edges: ${{ steps.extract.outputs.edges }}
+
+  - id: distill
+    skill: skills/distill-lesson
+    depends_on: [reconcile]
+    inputs:
+      incident_id: ${{ inputs.incident_id }}
+      # distill-lesson gates internally: saves only if pattern_flags is
+      # non-empty OR unconditional is true. No conditional in this flow.
+      pattern_flags: ${{ steps.reconcile.outputs.pattern_flags }}
+      unconditional: ${{ inputs.unconditional_lesson }}
+
+  - id: log
+    tool: tools/file-write
+    operation: append
+    depends_on: [distill]
+    inputs:
+      path: memory/runtime/dailylog.md
+      content: >
+        - ${{ env.UTC_NOW }} | ingest-incident | completed |
+          incident=${{ inputs.incident_id }},
+          nodes_added=${{ steps.reconcile.outputs.nodes_added }},
+          edges_added=${{ steps.reconcile.outputs.edges_added }},
+          lesson=${{ steps.distill.outputs.stored_id | default('none') }}

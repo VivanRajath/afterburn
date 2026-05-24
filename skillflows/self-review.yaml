@@ -1,0 +1,44 @@
+name: self-review
+version: "0.1.0"
+description: >
+  Audit past PR warnings against engineer outcomes, update lesson
+  confidence weights, flag blind spots, and (in weekly-summary mode)
+  replay past checks in sandbox. One flow handles both the nightly
+  and weekly-summary schedules via the mode input.
+
+trigger:
+  schedule: scheduler.yml#nightly-self-review   # daily at 02:00 UTC
+  schedule_weekly: scheduler.yml#weekly-summary  # Sundays at 09:00 UTC
+  manual: true
+
+inputs:
+  mode:
+    type: string
+    required: false
+    default: daily
+    enum: [daily, weekly-summary]
+    description: >
+      daily: audit confidence weights and blind spots.
+      weekly-summary: also runs sandbox replay and calculates
+      detection/false-positive rates.
+
+steps:
+  - id: review
+    skill: skills/self-review
+    inputs:
+      mode: ${{ inputs.mode }}
+    # Returns: lessons_reviewed, blind_spots_found, confidence_deltas_applied,
+    #          detection_rate (weekly only), false_positive_rate (weekly only)
+
+  - id: log
+    tool: tools/file-write
+    operation: append
+    depends_on: [review]
+    inputs:
+      path: memory/runtime/dailylog.md
+      content: >
+        - ${{ env.UTC_NOW }} | self-review | completed |
+          mode=${{ inputs.mode }},
+          reviewed=${{ steps.review.outputs.lessons_reviewed }},
+          blind_spots=${{ steps.review.outputs.blind_spots_found }},
+          confidence_deltas=${{ steps.review.outputs.confidence_deltas_applied }}

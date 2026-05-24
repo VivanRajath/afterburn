@@ -1,0 +1,44 @@
+# Despite the name, this flow runs against whichever memory backend is
+# currently configured. The "cognis" suffix reflects that Cognis is the
+# default backend; rename in v0.2 if we standardize this pattern across
+# adapters.
+
+name: bootstrap-from-cognis
+version: "0.1.0"
+description: >
+  Reconstruct the causal graph from existing incidents in the memory
+  backend. Used after switching backends (post-export) or after
+  knowledge/incident-graph.json is lost or corrupted. Pagination and
+  per-incident processing are owned by batch-ingest; this flow stays
+  linear with no iteration at the skillflow level.
+
+trigger:
+  manual: true   # operator-invoked only; not on a schedule
+
+steps:
+  - id: preflight
+    tool: tools/memory-backend
+    operation: get
+    inputs:
+      id: probe:bootstrap-preflight
+    # A null record response confirms the backend is reachable.
+    # A tool error halts the flow — do not proceed with an
+    # unreachable backend.
+
+  - id: batch-ingest
+    skill: skills/batch-ingest
+    depends_on: [preflight]
+
+  - id: log
+    tool: tools/file-write
+    operation: append
+    depends_on: [batch-ingest]
+    inputs:
+      path: memory/runtime/dailylog.md
+      content: >
+        - ${{ env.UTC_NOW }} | bootstrap-from-cognis | completed |
+          backend=${{ env.AFTERBURN_MEMORY_BACKEND }},
+          incidents_processed=${{ steps.batch-ingest.outputs.records_processed }},
+          nodes=${{ steps.batch-ingest.outputs.nodes_total }},
+          edges=${{ steps.batch-ingest.outputs.edges_total }},
+          lessons=${{ steps.batch-ingest.outputs.lessons_total }}

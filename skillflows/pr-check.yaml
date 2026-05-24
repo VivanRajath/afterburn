@@ -1,0 +1,42 @@
+name: pr-check
+version: "0.1.0"
+description: >
+  The demo flow. On a pull request event, run the PR check skill (which
+  handles tier dispatch internally), then log the outcome. This flow
+  intentionally stays flat — all dispatch logic lives inside check-pr.
+
+trigger:
+  event: pull_request.opened   # pull_request.synchronized excluded in v0.1
+  manual: true
+
+inputs:
+  repo:
+    type: string
+    required: true
+    description: "Owner/repo format (e.g. acme/api-server)."
+  pr_number:
+    type: integer
+    required: true
+
+steps:
+  - id: check
+    skill: skills/check-pr
+    inputs:
+      repo: ${{ inputs.repo }}
+      pr_number: ${{ inputs.pr_number }}
+    # check-pr dispatches to jnr/snr/architect internally and returns:
+    #   tier (jnr|snr|architect), warning_posted (bool),
+    #   lesson_cited (string|null), comment_url (string|null)
+
+  - id: log
+    tool: tools/file-write
+    operation: append
+    depends_on: [check]
+    inputs:
+      path: memory/runtime/dailylog.md
+      content: >
+        - ${{ env.UTC_NOW }} | pr-check | completed |
+          pr=${{ inputs.repo }}#${{ inputs.pr_number }},
+          tier=${{ steps.check.outputs.tier }},
+          warning=${{ steps.check.outputs.warning_posted }},
+          lesson=${{ steps.check.outputs.lesson_cited | default('none') }}
