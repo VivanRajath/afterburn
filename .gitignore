@@ -28,6 +28,8 @@ yarn-error.log*
 .next/
 out/
 .vercel
+.env.local
+tsconfig.tsbuildinfo
 
 # Editor / OS artifacts
 .DS_Store
