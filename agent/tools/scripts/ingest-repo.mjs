@@ -8,6 +8,7 @@ import extract from './ontology-extractor.mjs';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const GRAPH_PATH = join(__dir, '..', '..', 'knowledge', 'incident-graph.json');
+const PACE_MS = parseInt(process.env.AFTERBURN_INGEST_PACE_MS ?? '10000', 10);
 
 const SKIP_DIRS = new Set(['.git', 'node_modules', 'vendor', '.next', 'dist', 'build']);
 const PM_DIRS = new Set(['post-mortems', 'postmortems', 'incidents', 'post_mortems', 'outages']);
@@ -218,7 +219,14 @@ async function main() {
   let edgesCreated = 0;
   const processedFiles = [];
 
-  for (const { full, rel } of files) {
+  for (let i = 0; i < files.length; i++) {
+    const { full, rel } = files[i];
+
+    if (i > 0) {
+      console.log(`[pace] sleeping ${PACE_MS / 1000}s to respect Groq rate limits (file ${i + 1} of ${files.length})`);
+      await new Promise((r) => setTimeout(r, PACE_MS));
+    }
+
     let text;
     try {
       const raw = await readFile(full, 'utf8');
