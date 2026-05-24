@@ -1,0 +1,63 @@
+version: "0.1.0"
+assessed_on: "2026-05-24"
+note: >
+  Controls listed here reflect what afterburn v0.1.0 actually satisfies
+  as built. Controls with status: partial or status: gap are honest
+  assessments. Do not claim full coverage for controls not yet implemented.
+
+controls:
+  - id: SOC2-CC7.2
+    title: System Monitoring — Logged Events
+    status: satisfied
+    evidence: >
+      Every skillflow invocation writes a timestamped entry to
+      memory/runtime/dailylog.md via the terminal log step in each flow.
+      Hooks write run_id at bootstrap and flush elapsed time at teardown.
+      Log format: ISO 8601 UTC | agent | action | subject.
+    artifact: memory/runtime/dailylog.md
+
+  - id: SOC2-CC6.1
+    title: Logical Access Controls
+    status: satisfied
+    evidence: >
+      DUTIES.md defines explicit write scopes per agent. No agent can write
+      outside its declared scope. sandbox-runner is restricted to
+      self-reviewer only, enforced in DUTIES.md Restricted Tools section
+      and echoed in every other agent's RULES.md Must Never list.
+    artifact: DUTIES.md
+
+  - id: FINRA-4511
+    title: Books and Records — Retention
+    status: partial
+    evidence: >
+      Incident records and distilled lessons are persisted to the
+      configured memory backend (Cognis, filesystem, SQLite, or S3).
+      Records are retained indefinitely unless the backend purges them.
+    gap: >
+      afterburn does not enforce a minimum retention period or immutable
+      log requirement. Retention duration is determined solely by backend
+      configuration. Operators must configure backend retention policies
+      to meet FINRA 4511's six-year minimum independently.
+    artifact: tools/memory-backend.yaml
+
+  - id: SOC2-CC6.6
+    title: Change Management — Authorization
+    status: gap
+    evidence: null
+    gap: >
+      No four-eyes approval workflow is implemented in v0.1. PRs receive
+      comment warnings only; merge gates are not enforced by afterburn.
+      This control requires a future feature (merge blocking pending
+      human sign-off) to achieve satisfied status.
+
+  - id: SOC2-CC7.3
+    title: Incident Response — Escalation
+    status: partial
+    evidence: >
+      afterburn ingests post-mortems and surfaces causal patterns to
+      engineers before code ships. The system adds institutional memory
+      to the review process without automating escalation.
+    gap: >
+      No automated paging, alerting, or on-call escalation is implemented.
+      afterburn posts comments; response actions are fully human-owned.
+    artifact: skillflows/pr-check.yaml

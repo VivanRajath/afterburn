@@ -1,0 +1,129 @@
+{
+  "_notes": {
+    "extraction_stage": "This represents extractor output for incident PAY-2024-031501. The cartographer will merge these into incident-graph.json and — finding no satisfies edge on root-cause:missing-db-index-webhook-events — will set band_aid_candidate to true on the incident node.",
+    "satisfies_edge": "Absent by design. mitigation:add-webhook-events-index-2024-03-15 resolved the incident but did not permanently address the root cause. Action item #1 (migration linter rule) would create a permanent Mitigation with a satisfies edge when completed."
+  },
+  "version": "0.1.0",
+  "nodes": [
+    {
+      "id": "incident:PAY-2024-031501",
+      "type": "Incident",
+      "properties": {
+        "title": "Connection Pool Exhaustion in Payments Service",
+        "occurred_at": "2024-03-15T14:23:00Z",
+        "severity": "SEV-2",
+        "duration_minutes": 47,
+        "band_aid_candidate": false
+      }
+    },
+    {
+      "id": "service:payments-service",
+      "type": "Service",
+      "properties": {
+        "name": "payments-service",
+        "version": "v2.4.1"
+      }
+    },
+    {
+      "id": "service:orders-service",
+      "type": "Service",
+      "properties": {
+        "name": "orders-service"
+      }
+    },
+    {
+      "id": "root-cause:missing-db-index-webhook-events",
+      "type": "RootCause",
+      "properties": {
+        "description": "Missing index on webhook_events.stripe_event_id causes O(n) table scans under high write volume",
+        "category": "database"
+      }
+    },
+    {
+      "id": "error:connection-pool-exhaustion-payments",
+      "type": "Error",
+      "properties": {
+        "message": "payments-service connection pool exhausted",
+        "code": "ECONNRESET"
+      }
+    },
+    {
+      "id": "symptom:order-payment-status-timeout",
+      "type": "Symptom",
+      "properties": {
+        "observable": "orders-service payment status calls timeout at 10s during checkout",
+        "severity": "high"
+      }
+    },
+    {
+      "id": "mitigation:add-webhook-events-index-2024-03-15",
+      "type": "Mitigation",
+      "properties": {
+        "action": "CREATE INDEX CONCURRENTLY idx_stripe_event_id ON webhook_events(stripe_event_id)",
+        "permanent": false,
+        "applied_at": "2024-03-15T14:44:00Z"
+      }
+    },
+    {
+      "id": "code-path:src/payments/webhook_handler.py",
+      "type": "CodePath",
+      "properties": {
+        "language": "python",
+        "last_incident": "incident:PAY-2024-031501"
+      }
+    },
+    {
+      "id": "code-path:src/payments/db/migrations/0042_webhook_events.py",
+      "type": "CodePath",
+      "properties": {
+        "language": "python",
+        "last_incident": "incident:PAY-2024-031501"
+      }
+    },
+    {
+      "id": "code-path:src/orders/payment_status.py",
+      "type": "CodePath",
+      "properties": {
+        "language": "python",
+        "last_incident": "incident:PAY-2024-031501"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "root-cause:missing-db-index-webhook-events",
+      "target": "error:connection-pool-exhaustion-payments",
+      "type": "caused"
+    },
+    {
+      "source": "error:connection-pool-exhaustion-payments",
+      "target": "symptom:order-payment-status-timeout",
+      "type": "manifested_as"
+    },
+    {
+      "source": "service:orders-service",
+      "target": "service:payments-service",
+      "type": "depended_on"
+    },
+    {
+      "source": "incident:PAY-2024-031501",
+      "target": "code-path:src/payments/webhook_handler.py",
+      "type": "touched"
+    },
+    {
+      "source": "incident:PAY-2024-031501",
+      "target": "code-path:src/payments/db/migrations/0042_webhook_events.py",
+      "type": "touched"
+    },
+    {
+      "source": "incident:PAY-2024-031501",
+      "target": "code-path:src/orders/payment_status.py",
+      "type": "touched"
+    },
+    {
+      "source": "mitigation:add-webhook-events-index-2024-03-15",
+      "target": "incident:PAY-2024-031501",
+      "type": "resolved"
+    }
+  ]
+}

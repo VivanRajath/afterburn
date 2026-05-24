@@ -1,0 +1,39 @@
+version: "0.1.0"
+note: >
+  Controls in regulatory-map.yaml should be re-validated on this schedule.
+  A designated compliance owner or Lyzr engineering performs each review.
+
+schedule:
+  - control: SOC2-CC7.2
+    frequency: quarterly
+    method: >
+      Spot-check memory/runtime/dailylog.md entries across a sample of
+      20 PR checks and 5 skillflow runs. Confirm every entry has a valid
+      ISO 8601 UTC timestamp and includes agent, action, and subject fields.
+
+  - control: SOC2-CC6.1
+    frequency: on-change
+    method: >
+      Re-validate DUTIES.md write scope matrix whenever a new agent or
+      tool is added. Confirm sandbox-runner remains restricted to
+      self-reviewer in both DUTIES.md and the new agent's RULES.md.
+
+  - control: FINRA-4511
+    frequency: quarterly
+    method: >
+      Confirm memory backend retention policy matches regulatory
+      requirement for the deployment. afterburn does not enforce
+      retention — verify operator backend configuration independently.
+
+  - control: SOC2-CC6.6
+    frequency: on-feature-addition
+    method: >
+      Currently gapped. Re-evaluate when PR merge-blocking or four-eyes
+      approval workflow is scoped for implementation.
+
+  - control: SOC2-CC7.3
+    frequency: quarterly
+    method: >
+      Confirm the PR check flow posts comments as expected in a test
+      repository. Verify no escalation path has been added without
+      updating this assessment.

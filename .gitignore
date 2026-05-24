@@ -1,0 +1,36 @@
+# Runtime state — regenerated on every run; not source
+memory/runtime/*.md
+
+# Secrets
+.env
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Node / JS artifacts
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Editor / OS artifacts
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Note: knowledge/incident-graph.json is tracked in its empty-seed form
+# per Phase 4. Do NOT add it here — the empty seed is part of the source
+# tree and is the canonical starting state for a fresh deployment.
