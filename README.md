@@ -79,6 +79,15 @@ On Windows, use the included PowerShell scripts:
 See `examples/sample-incident/` for a fictional post-mortem and the graph it
 produces, and `examples/sample-pr/` for what a PR warning looks like in practice.
 
+## Repo cloning (v0.1 vs v0.2)
+
+The web platform's "Connect a repo" flow currently clones using the system `git`
+binary via `child_process.spawn` — zero new npm dependencies, works out of the box.
+
+v0.2 will route clones through
+[Jr Architect](https://github.com/VivanRajath/Jr-Architect), a Docker-isolated
+sandbox runtime, so untrusted repos never touch the host filesystem.
+
 ## Architecture
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the full system walkthrough — agent

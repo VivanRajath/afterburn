@@ -65,6 +65,10 @@ export async function run({ raw_text, incident_id }) {
   return result;
 }
 
+export default async function extract(rawText, incidentId) {
+  return run({ raw_text: rawText, incident_id: incidentId });
+}
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const chunks = [];
   for await (const chunk of process.stdin) chunks.push(chunk);

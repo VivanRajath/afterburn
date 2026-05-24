@@ -8,15 +8,22 @@ interface ConnectRepoProps {
   onSuccess: (stats: RepoStats) => void;
 }
 
+interface IngestResult extends RepoStats {
+  warning?: string;
+  files?: string[];
+  duration_ms?: number;
+}
+
 export default function ConnectRepo({ onSuccess }: ConnectRepoProps) {
-  const [url, setUrl] = useState('github.com/VivanRajath/demo-payments-service');
+  const [url, setUrl] = useState('https://github.com/danluu/post-mortems');
   const [loading, setLoading] = useState(false);
-  const [stats, setStats] = useState<RepoStats | null>(null);
+  const [result, setResult] = useState<IngestResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function handleConnect() {
     setLoading(true);
     setError(null);
+    setResult(null);
     try {
       const res = await fetch('/api/add-repo', {
         method: 'POST',
@@ -25,7 +32,7 @@ export default function ConnectRepo({ onSuccess }: ConnectRepoProps) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Unknown error');
-      setStats(data);
+      setResult(data);
       onSuccess(data);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -38,7 +45,7 @@ export default function ConnectRepo({ onSuccess }: ConnectRepoProps) {
     <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
       <h2 className="text-sm font-semibold text-slate-900">Connect a repo</h2>
       <p className="text-xs text-slate-500 mt-0.5">
-        Clones the repo, ingests post-mortems, builds the causal graph
+        Point afterburn at any public github.com repo. It will scan for post-mortem markdown files and build the causal graph.
       </p>
 
       <div className="mt-4 flex gap-3">
@@ -46,8 +53,8 @@ export default function ConnectRepo({ onSuccess }: ConnectRepoProps) {
           type="text"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleConnect()}
-          placeholder="github.com/your-org/repo"
+          onKeyDown={(e) => e.key === 'Enter' && !loading && handleConnect()}
+          placeholder="https://github.com/your-org/repo"
           className="flex-1 text-sm border border-slate-300 rounded px-3 py-2 font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent"
         />
         <button
@@ -55,27 +62,63 @@ export default function ConnectRepo({ onSuccess }: ConnectRepoProps) {
           disabled={loading}
           className="px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
         >
-          {loading ? 'Connecting…' : 'Add afterburn'}
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <svg className="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+              </svg>
+              Analyzing…
+            </span>
+          ) : 'Add afterburn'}
         </button>
       </div>
 
-      {error && (
-        <p className="mt-2 text-xs text-rose-600">{error}</p>
+      {loading && (
+        <p className="mt-2 text-xs text-slate-500">
+          Cloning and analyzing… this can take 30–90 seconds.
+        </p>
       )}
 
-      {stats && (
+      {error && (
+        <div className="mt-3 rounded border border-rose-200 bg-rose-50 px-3 py-2">
+          <p className="text-xs font-medium text-rose-700">Connection failed</p>
+          <p className="text-xs text-rose-600 mt-0.5">{error}</p>
+          <button
+            onClick={handleConnect}
+            className="mt-2 text-xs text-rose-700 underline hover:no-underline"
+          >
+            Try again
+          </button>
+        </div>
+      )}
+
+      {result?.warning && (
+        <div className="mt-3 rounded border border-amber-200 bg-amber-50 px-3 py-2">
+          <p className="text-xs font-medium text-amber-700">No post-mortems found</p>
+          <p className="text-xs text-amber-600 mt-0.5">{result.warning}</p>
+        </div>
+      )}
+
+      {result && !result.warning && (
         <div className="mt-3 flex flex-wrap gap-2">
-          <StatusPill label={`${stats.post_mortems_found} post-mortem${stats.post_mortems_found !== 1 ? 's' : ''}`} variant="success" />
-          <StatusPill label={`${stats.graph_node_count} nodes`} />
-          <StatusPill label={`${stats.graph_edge_count} edges`} />
-          {stats.band_aid_count > 0 && (
-            <StatusPill label={`⚡ ${stats.band_aid_count} band-aid`} variant="warning" />
+          <StatusPill
+            label={`${result.post_mortems_found} post-mortem${result.post_mortems_found !== 1 ? 's' : ''}`}
+            variant="success"
+          />
+          <StatusPill label={`${result.graph_node_count} nodes`} />
+          <StatusPill label={`${result.graph_edge_count} edges`} />
+          {result.band_aid_count > 0 && (
+            <StatusPill label={`⚡ ${result.band_aid_count} band-aid`} variant="warning" />
           )}
-          {stats.hot_zone_count > 0 && (
-            <StatusPill label={`🔥 ${stats.hot_zone_count} hot zone${stats.hot_zone_count !== 1 ? 's' : ''}`} variant="danger" />
+          {result.hot_zone_count > 0 && (
+            <StatusPill label={`🔥 ${result.hot_zone_count} hot zone${result.hot_zone_count !== 1 ? 's' : ''}`} variant="danger" />
           )}
-          {stats.hot_zone_count === 0 && (
+          {result.hot_zone_count === 0 && (
             <StatusPill label="🔥 0 hot zones" variant="neutral" />
+          )}
+          {result.duration_ms && (
+            <StatusPill label={`${(result.duration_ms / 1000).toFixed(1)}s`} variant="neutral" />
           )}
         </div>
       )}
