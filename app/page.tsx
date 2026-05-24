@@ -15,8 +15,10 @@ export default function Page() {
   const [graphData, setGraphData] = useState<GraphData | null>(null);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [lastCheckResult, setLastCheckResult] = useState<CheckResult | null>(null);
+  const [showStaleBanner, setShowStaleBanner] = useState(false);
 
   const handleRepoSuccess = useCallback(async (stats: RepoStats) => {
+    setShowStaleBanner(false);
     setRepoState({ ready: true, stats });
     setSelectedNodeId(null);
     const res = await fetch('/api/graph?repo_id=demo');
@@ -24,12 +26,25 @@ export default function Page() {
     setGraphData(data);
   }, []);
 
+  const handleNoResults = useCallback(() => {
+    setShowStaleBanner(true);
+  }, []);
+
+  const hasGraphData = graphData !== null && graphData.nodes.length > 0;
+
   return (
     <div className="min-h-screen bg-slate-50">
       <Header selectedModel={selectedModel} setSelectedModel={setSelectedModel} />
 
       <main className="max-w-6xl mx-auto px-6 py-8 space-y-6">
-        <ConnectRepo onSuccess={handleRepoSuccess} />
+        <ConnectRepo onSuccess={handleRepoSuccess} onNoResults={handleNoResults} />
+
+        {showStaleBanner && hasGraphData && (
+          <div className="flex items-center gap-2 rounded border border-slate-200 bg-white px-4 py-2.5 text-xs text-slate-500 shadow-sm">
+            <span>📊</span>
+            <span>Showing graph from previous ingestion. Connect a repo with post-mortems to populate fresh data.</span>
+          </div>
+        )}
 
         <GraphView
           graphData={graphData}

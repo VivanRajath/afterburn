@@ -4,18 +4,19 @@ import { useState } from 'react';
 import StatusPill from '@/components/StatusPill';
 import type { RepoStats } from '@/lib/types';
 
-interface ConnectRepoProps {
-  onSuccess: (stats: RepoStats) => void;
-}
-
 interface IngestResult extends RepoStats {
   warning?: string;
   files?: string[];
   duration_ms?: number;
 }
 
-export default function ConnectRepo({ onSuccess }: ConnectRepoProps) {
-  const [url, setUrl] = useState('https://github.com/danluu/post-mortems');
+interface ConnectRepoProps {
+  onSuccess: (stats: RepoStats) => void;
+  onNoResults?: () => void;
+}
+
+export default function ConnectRepo({ onSuccess, onNoResults }: ConnectRepoProps) {
+  const [url, setUrl] = useState('https://github.com/PostHog/post-mortems');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<IngestResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +34,12 @@ export default function ConnectRepo({ onSuccess }: ConnectRepoProps) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Unknown error');
       setResult(data);
-      onSuccess(data);
+      if (data.warning) {
+        // No post-mortems found — signal page without triggering a graph refetch
+        onNoResults?.();
+      } else {
+        onSuccess(data);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -96,7 +102,12 @@ export default function ConnectRepo({ onSuccess }: ConnectRepoProps) {
       {result?.warning && (
         <div className="mt-3 rounded border border-amber-200 bg-amber-50 px-3 py-2">
           <p className="text-xs font-medium text-amber-700">No post-mortems found</p>
-          <p className="text-xs text-amber-600 mt-0.5">{result.warning}</p>
+          <p className="text-xs text-amber-600 mt-0.5">
+            No post-mortem files found in this repo. Showing previously ingested data below.
+          </p>
+          {result.warning && (
+            <p className="text-xs text-amber-500 mt-1 font-mono">{result.warning}</p>
+          )}
         </div>
       )}
 

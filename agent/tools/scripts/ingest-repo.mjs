@@ -8,7 +8,7 @@ import extract from './ontology-extractor.mjs';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const GRAPH_PATH = join(__dir, '..', '..', 'knowledge', 'incident-graph.json');
-const PACE_MS = parseInt(process.env.AFTERBURN_INGEST_PACE_MS ?? '10000', 10);
+const PACE_MS = parseInt(process.env.AFTERBURN_INGEST_PACE_MS ?? '15000', 10);
 
 const SKIP_DIRS = new Set(['.git', 'node_modules', 'vendor', '.next', 'dist', 'build']);
 const PM_DIRS = new Set(['post-mortems', 'postmortems', 'incidents', 'post_mortems', 'outages']);
