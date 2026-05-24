@@ -1,0 +1,71 @@
+name: file-write
+version: "0.1.0"
+description: >
+  Write or append to files on the local filesystem. Scope is narrow by
+  design. Only agents with explicit write permissions in DUTIES.md may
+  invoke this tool, and only for their declared target paths.
+
+# Any call from an agent not in this list is a scope violation per DUTIES.md.
+used_by:
+  - agents/cartographer    # target: knowledge/incident-graph.json
+  - agents/extractor       # target: memory/runtime/ staging output
+  - agents/scribe          # target: memory/runtime/ log entries
+  - agents/self-reviewer   # target: memory/runtime/ and lesson updates
+
+operations:
+  - name: write
+    description: >
+      Write content to a file, creating it if absent and overwriting if
+      present. Caller is responsible for scope compliance per DUTIES.md.
+    inputs:
+      path:
+        type: string
+        required: true
+      content:
+        type: string
+        required: true
+    outputs:
+      success:
+        type: boolean
+      bytes_written:
+        type: integer
+
+  - name: append
+    description: >
+      Append content to an existing file. Used for runtime log entries
+      where overwriting would destroy history (e.g. dailylog.md,
+      key-decisions.md).
+    inputs:
+      path:
+        type: string
+        required: true
+      content:
+        type: string
+        required: true
+    outputs:
+      success:
+        type: boolean
+      bytes_appended:
+        type: integer
+
+  - name: write_json
+    description: >
+      Serialize an object to JSON and write it atomically via a
+      write-then-rename pattern. Used by cartographer for
+      incident-graph.json to prevent partial writes corrupting the graph.
+    inputs:
+      path:
+        type: string
+        required: true
+      data:
+        type: object
+        required: true
+      pretty:
+        type: boolean
+        required: false
+        default: true
+    outputs:
+      success:
+        type: boolean
+      bytes_written:
+        type: integer

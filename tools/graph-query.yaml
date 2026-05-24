@@ -1,0 +1,84 @@
+name: graph-query
+version: "0.1.0"
+description: >
+  Read-only query interface for knowledge/incident-graph.json. Used by
+  oracle-family agents to find historical patterns relevant to a PR diff.
+  Never writes to the graph — all mutations go through the cartographer.
+
+used_by:
+  - agents/oracle
+  - agents/jnr-oracle
+  - agents/snr-oracle
+  - agents/architect-oracle
+  - agents/self-reviewer
+
+graph_source: knowledge/incident-graph.json
+
+operations:
+  - name: incidents_touching_files
+    description: >
+      Count and return past incidents linked to given file paths. Used by
+      oracle to determine incident history for changed files and select
+      the appropriate tier (jnr / snr / architect).
+    inputs:
+      file_path:
+        type: string
+        required: true
+    outputs:
+      nodes:
+        type: array
+        description: >
+          Matching nodes with: id, type, label, incident_count,
+          last_seen (ISO 8601 date), pattern_flags (array).
+      incident_count:
+        type: integer
+        description: Total distinct incidents referencing this file path.
+
+  - name: multi_hop
+    description: >
+      Traverse the causal graph up to N hops from a seed node. Used by
+      architect-oracle to find deep causal chains connecting a changed
+      file to historical root causes.
+    inputs:
+      seed_id:
+        type: string
+        required: true
+      max_hops:
+        type: integer
+        required: false
+        default: 3
+      edge_types:
+        type: array
+        items: string
+        required: false
+        description: Restrict traversal to these edge types. Omit to follow all edges.
+    outputs:
+      paths:
+        type: array
+        description: >
+          Each path is an ordered list of {node_id, edge_type, node_id}
+          triples from seed to terminus.
+      nodes:
+        type: array
+        description: All distinct nodes encountered across all paths.
+
+  - name: pattern_match
+    description: >
+      Find first-class Pattern nodes matching a named flag. Used by oracle
+      to check whether changed files sit in a hot zone, recurring cause,
+      or band-aid pattern.
+    inputs:
+      pattern_type:
+        type: string
+        required: true
+        enum: [hot-zone, recurring, band-aid]
+      file_path:
+        type: string
+        required: false
+        description: Scope the match to patterns referencing this file. Omit for global.
+    outputs:
+      matches:
+        type: array
+        description: >
+          Matching Pattern nodes: id, label, pattern_type,
+          associated_files[], incident_count, first_seen, last_seen.

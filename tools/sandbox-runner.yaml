@@ -1,0 +1,67 @@
+name: sandbox-runner
+version: "0.1.0"
+description: >
+  Execute read-only commands against a repository in an isolated,
+  resource-limited sandbox. Used by the self-reviewer to replay past PR
+  checks against repo state without risk to the host environment. Design
+  draws from Jr Architect (repo-sandbox-agent).
+
+used_by: [agents/self-reviewer]
+
+# These constraints are enforced by the runtime — not advisory.
+constraints:
+  network: disabled
+  filesystem_writes: disabled
+  max_runtime_seconds: 30
+  # Output beyond this limit is truncated; the truncated flag is set true
+  max_output_bytes: 65536
+
+operations:
+  - name: run
+    description: >
+      Execute a single read-only shell command inside the sandbox and
+      return its output. Write commands (rm, mv, cp, git commit, etc.)
+      and network commands (curl, wget, etc.) are rejected before
+      execution.
+    inputs:
+      command:
+        type: string
+        required: true
+        description: >
+          Shell command to run. Must be read-only (grep, cat, find, tree,
+          head, tail, wc, ls, git log, git diff, etc.).
+      working_dir:
+        type: string
+        required: false
+        description: Directory within the sandbox to run from. Defaults to repo root.
+      timeout_seconds:
+        type: integer
+        required: false
+        default: 10
+        description: Per-command timeout. Capped at constraints.max_runtime_seconds.
+    outputs:
+      stdout:
+        type: string
+      stderr:
+        type: string
+      exit_code:
+        type: integer
+      truncated:
+        type: boolean
+        description: True if output was cut at max_output_bytes.
+
+  - name: check_command
+    description: >
+      Validate whether a command is permitted before execution. Agents
+      should call this for any dynamically-constructed command before
+      calling run.
+    inputs:
+      command:
+        type: string
+        required: true
+    outputs:
+      allowed:
+        type: boolean
+      reason:
+        type: string
+        description: Explanation if denied; empty string if allowed.

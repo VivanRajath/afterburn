@@ -1,0 +1,49 @@
+name: ontology-extractor
+version: "0.1.0"
+description: >
+  Extracts typed entities and directed relationships from raw incident text.
+  Used by the extractor sub-agent to populate the staging area in
+  memory/runtime/ before the cartographer merges output into the causal
+  graph. Output types are strictly constrained to knowledge/schema/.
+
+used_by: [agents/extractor]
+
+operations:
+  - name: extract
+    description: >
+      Run ontology extraction on a block of incident text. Returns typed
+      nodes and directed edges matching the afterburn graph schema.
+    inputs:
+      incident_id:
+        type: string
+        required: true
+      raw_text:
+        type: string
+        required: true
+      focus_types:
+        type: array
+        items: string
+        required: false
+        # If omitted, all node types are attempted
+        default: [Service, Error, Trigger, RootCause, Symptom, Mitigation, CodePath]
+    outputs:
+      nodes:
+        type: array
+        description: >
+          Extracted nodes. Each node contains: id (string), type (NodeType),
+          label (string), confidence (float 0.0–1.0), source_span (string).
+      edges:
+        type: array
+        description: >
+          Directed relationships. Each edge contains: source_id, target_id,
+          type (EdgeType), confidence (float 0.0–1.0).
+      extraction_id:
+        type: string
+        description: >
+          Unique identifier for this extraction run. Referenced by
+          cartographer when merging staged output into the graph.
+
+# This tool must not produce node or edge types outside these schemas.
+schema_ref:
+  nodes: knowledge/schema/nodes.yaml
+  edges: knowledge/schema/edges.yaml
