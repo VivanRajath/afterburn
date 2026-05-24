@@ -1,0 +1,54 @@
+version: "0.1.0"
+description: >
+  Recurring schedules and event triggers for afterburn. Exactly two
+  recurring schedules and two event triggers are declared here. Do not
+  add triggers without updating this comment.
+
+# All times are UTC.
+
+schedules:
+  - name: nightly-self-review
+    description: >
+      Run the self-review skillflow nightly. Audits past PR warnings,
+      logs blind spots, and updates lesson confidence weights.
+    cron: "0 2 * * *"        # 02:00 UTC every day
+    skillflow: skillflows/self-review.yaml
+    agent: agents/self-reviewer
+    on_failure: log_to_dailylog
+
+  - name: weekly-summary
+    description: >
+      Generate a weekly summary of graph changes, pattern promotions,
+      and self-reviewer audit results. Written to memory/runtime/dailylog.md.
+    cron: "0 9 * * 0"        # 09:00 UTC every Sunday
+    skillflow: skillflows/self-review.yaml
+    agent: agents/self-reviewer
+    # weekly-summary reuses self-review with a summary flag
+    flags:
+      mode: weekly-summary
+    on_failure: log_to_dailylog
+
+triggers:
+  - name: incident-created
+    description: >
+      When a new post-mortem is created, kick off the full ingestion
+      pipeline: ingestor → extractor → cartographer → scribe.
+    event: incident.created
+    skillflow: skillflows/ingest-incident.yaml
+    # The event payload must include `source` (URL or file path).
+    payload_required: [source]
+    on_failure: log_to_dailylog
+
+  - name: pull-request-opened
+    description: >
+      When a pull request is opened or synchronized, kick off the PR
+      check pipeline: oracle → (jnr|snr|architect)-oracle.
+    event: pull_request.opened
+    # pull_request.synchronized is intentionally excluded for v0.1.
+    # Firing on every push amplifies noise before self-review has tuned
+    # false-positive rates. Revisit for v0.2 once diff-aware re-warning
+    # is confirmed safe. Tracked: scheduler v0.2 scope.
+    skillflow: skillflows/pr-check.yaml
+    # The event payload must include repo and pr_number.
+    payload_required: [repo, pr_number]
+    on_failure: log_to_dailylog
