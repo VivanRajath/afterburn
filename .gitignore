@@ -1,8 +1,9 @@
-# Runtime state — regenerated on every run; not source
-memory/runtime/*.md
+# Agent runtime state — regenerated on every run; not source
+agent/memory/runtime/*.md
 
 # Secrets
 .env
+agent/.env
 
 # Python artifacts
 __pycache__/
