@@ -1,0 +1,143 @@
+version: "0.1.0"
+description: >
+  Canonical edge type definitions for the afterburn causal graph.
+  Each entry specifies valid source and target node types, required
+  properties, and optional properties. The cartographer must reject
+  edges whose source or target types are not in the declared lists.
+
+# All edges are directed: source → target.
+# confidence is optional on all edges; defaults to 1.0 if omitted.
+
+edge_types:
+
+  - type: caused
+    description: >
+      A service, trigger, or root cause directly caused an error,
+      symptom, or incident.
+    source_types: [Service, Trigger, RootCause]
+    target_types: [Error, Symptom, Incident]
+    required: []
+    optional:
+      confidence:
+        type: number
+        minimum: 0.0
+        maximum: 1.0
+        default: 1.0
+      evidence:
+        type: string
+        description: Quote or reference from the post-mortem supporting this edge.
+
+  - type: manifested_as
+    description: An error or incident manifested as an observable symptom.
+    source_types: [Error, Incident]
+    target_types: [Symptom]
+    required: []
+    optional:
+      confidence:
+        type: number
+        minimum: 0.0
+        maximum: 1.0
+        default: 1.0
+
+  - type: resolved
+    description: A mitigation resolved (stopped or reduced) an error, incident, or root cause.
+    source_types: [Mitigation]
+    target_types: [Error, Incident, RootCause]
+    required: []
+    optional:
+      resolved_at:
+        type: string
+        format: iso8601_utc
+      confidence:
+        type: number
+        minimum: 0.0
+        maximum: 1.0
+        default: 1.0
+
+  - type: touched
+    description: >
+      An incident involved a change to or failure in a specific code path.
+      This edge is the primary signal for hot-zone pattern detection.
+    source_types: [Incident]
+    target_types: [CodePath]
+    required: []
+    optional:
+      change_type:
+        type: string
+        enum: [read, write, deploy, config]
+        description: Nature of the involvement.
+      confidence:
+        type: number
+        minimum: 0.0
+        maximum: 1.0
+        default: 1.0
+
+  - type: depended_on
+    description: One service depended on another at the time of the incident.
+    source_types: [Service]
+    target_types: [Service]
+    required: []
+    optional:
+      dependency_type:
+        type: string
+        enum: [sync, async, storage, sidecar]
+      confidence:
+        type: number
+        minimum: 0.0
+        maximum: 1.0
+        default: 1.0
+
+  - type: satisfies
+    description: >
+      A mitigation permanently satisfies (addresses the root of) a root cause.
+      Distinct from resolved: satisfies implies the root cause will not recur
+      from this source. Used by band-aid detection — a RootCause with no
+      satisfies edge and multiple resolved edges is a band-aid candidate.
+    source_types: [Mitigation]
+    target_types: [RootCause]
+    required: []
+    optional:
+      confidence:
+        type: number
+        minimum: 0.0
+        maximum: 1.0
+        default: 1.0
+
+  - type: references
+    description: A lesson or pattern references a specific incident, code path, or root cause.
+    source_types: [Lesson, Pattern]
+    target_types: [Incident, CodePath, RootCause]
+    required: []
+    optional:
+      confidence:
+        type: number
+        minimum: 0.0
+        maximum: 1.0
+        default: 1.0
+
+  - type: prevented_by
+    description: >
+      An incident was partially or fully prevented from recurring by a
+      mitigation already in place. Used to track which mitigations are
+      actively blocking known failure modes.
+    source_types: [Incident]
+    target_types: [Mitigation]
+    required: []
+    optional:
+      confidence:
+        type: number
+        minimum: 0.0
+        maximum: 1.0
+        default: 1.0
+
+  - type: learned_from
+    description: A lesson was derived from a specific incident.
+    source_types: [Lesson]
+    target_types: [Incident]
+    required: []
+    optional:
+      confidence:
+        type: number
+        minimum: 0.0
+        maximum: 1.0
+        default: 1.0

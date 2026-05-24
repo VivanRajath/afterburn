@@ -1,0 +1,30 @@
+name: recurring-cause
+version: "0.1.0"
+description: >
+  A RootCause is recurring when the same root cause (matched by canonical
+  id) appears in two or more distinct incidents without an intervening
+  satisfies edge from a permanent Mitigation. Recurring Pattern nodes
+  signal that the system is patching symptoms instead of fixing causes.
+
+# Promotion rule — declarative threshold, not a query.
+rule:
+  node_type: RootCause
+  edge_type: caused         # count edges where this RootCause caused an Incident
+  count_distinct: Incident  # each incident counted once per root cause
+  threshold: 2              # >= 2 distinct incidents → candidate for promotion
+  # Promotion is suppressed if a satisfies edge exists from any Mitigation
+  # with mitigation_type == permanent. That would mean the cause is addressed.
+  suppress_if:
+    edge_type: satisfies
+    source_type: Mitigation
+    source_property:
+      mitigation_type: permanent
+
+# The promoted Pattern node inherits these properties.
+promoted_node:
+  type: Pattern
+  id_format: "pattern:recurring:<root-cause-slug>"
+  pattern_type: recurring
+  label_template: "Recurring cause: <root_cause_description> (seen in <incident_count> incidents)"
+
+demotion_threshold: 1  # falls below threshold or satisfies edge added → remove Pattern node

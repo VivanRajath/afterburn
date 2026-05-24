@@ -1,0 +1,27 @@
+name: hot-zone
+version: "0.1.0"
+description: >
+  A CodePath becomes a hot zone when it has been touched by three or
+  more distinct incidents. Hot-zone Pattern nodes are promoted by the
+  cartographer and trigger snr-oracle dispatch for any PR that touches
+  the flagged file.
+
+# Promotion rule — declarative threshold, not a query.
+rule:
+  node_type: CodePath
+  edge_type: touched        # count Incident → CodePath edges
+  count_distinct: Incident  # each incident counted once per file
+  threshold: 3              # >= 3 distinct incidents → promote to hot-zone
+
+# The promoted Pattern node inherits these properties.
+promoted_node:
+  type: Pattern
+  id_format: "pattern:hot-zone:<code-path-slug>"
+  pattern_type: hot-zone
+  label_template: "Hot zone: <file_path> touched in <incident_count> incidents"
+  # cartographer sets incident_count, first_seen, last_seen, associated_files
+
+# Re-evaluation: cartographer re-checks this rule after every graph merge.
+# If a CodePath later drops below the threshold (e.g. after graph pruning),
+# the Pattern node is demoted and its references edges are removed.
+demotion_threshold: 2  # fall below this → remove Pattern node

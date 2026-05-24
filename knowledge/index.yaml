@@ -1,0 +1,26 @@
+name: knowledge
+version: "0.1.0"
+description: >
+  Root index for afterburn's causal knowledge graph. Describes the files
+  in this directory, their roles, and how they relate to each other.
+
+# The live graph — cartographer writes here, oracle family reads here.
+graph:
+  file: knowledge/incident-graph.json
+  format: json
+  structure: "{nodes: [], edges: [], version: string, updated_at: string|null}"
+  writer: agents/cartographer
+  readers: [agents/oracle, agents/jnr-oracle, agents/snr-oracle, agents/architect-oracle, agents/self-reviewer]
+
+# Canonical type definitions. ontology-extractor and cartographer
+# must not produce types outside these schemas.
+schema:
+  nodes: knowledge/schema/nodes.yaml
+  edges: knowledge/schema/edges.yaml
+
+# Declarative pattern promotion rules. Cartographer evaluates these
+# after each merge to decide whether to promote nodes to Pattern status.
+patterns:
+  hot_zones: knowledge/patterns/hot-zones.yaml
+  band_aid_signatures: knowledge/patterns/band-aid-signatures.yaml
+  recurring_causes: knowledge/patterns/recurring-causes.yaml

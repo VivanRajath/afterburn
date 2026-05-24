@@ -1,0 +1,264 @@
+version: "0.1.0"
+description: >
+  Canonical node type definitions for the afterburn causal graph.
+  Each entry specifies the id format, required properties, and optional
+  properties. The cartographer uses id formats for deduplication across
+  incidents — nodes with the same canonical id are the same node.
+
+# Slug rules (apply to all id formats that contain <slug>):
+#   - lowercase kebab-case
+#   - spaces and underscores → hyphens
+#   - non-alphanumeric characters stripped (except hyphens and forward slashes)
+#   - forward slashes preserved in file-path slugs
+
+node_types:
+
+  - type: Service
+    description: A microservice, API, database, queue, or external dependency.
+    id_format: "service:<slug>"
+    id_example: "service:payment-api"
+    required:
+      name:
+        type: string
+        description: Human-readable service name.
+    optional:
+      team:
+        type: string
+        description: Owning team name.
+      repo:
+        type: string
+        description: Source repository (owner/repo format).
+      language:
+        type: string
+        description: Primary language (go, python, typescript, etc.).
+
+  - type: Error
+    description: A specific error type, exception class, or error condition.
+    id_format: "error:<slug>"
+    id_example: "error:null-pointer-payment-processor"
+    required:
+      message:
+        type: string
+        description: Error message, exception name, or canonical error string.
+    optional:
+      error_type:
+        type: string
+        description: Exception class or error category.
+      stack_pattern:
+        type: string
+        description: Regex pattern matching the stack trace signature.
+      http_status:
+        type: integer
+        description: HTTP status code if applicable.
+
+  - type: Trigger
+    description: The event or condition that initiated an incident.
+    id_format: "trigger:<slug>"
+    id_example: "trigger:black-friday-traffic-spike"
+    required:
+      description:
+        type: string
+        description: What happened to start the incident.
+    optional:
+      trigger_type:
+        type: string
+        enum: [traffic, deploy, config, external, unknown]
+      file_paths:
+        type: array
+        items: string
+        description: Code files involved in the triggering event.
+
+  - type: RootCause
+    description: The underlying systemic cause, not the immediate trigger.
+    id_format: "root-cause:<slug>"
+    id_example: "root-cause:missing-database-connection-timeout"
+    required:
+      description:
+        type: string
+        description: Concise statement of the root cause.
+    optional:
+      category:
+        type: string
+        enum: [config, code, infra, process]
+      recurrence_count:
+        type: integer
+        description: Number of times this cause has appeared. Maintained by cartographer.
+
+  - type: Symptom
+    description: An observable effect or signal that the system was degraded.
+    id_format: "symptom:<slug>"
+    id_example: "symptom:api-latency-spike-p99"
+    required:
+      description:
+        type: string
+    optional:
+      metric:
+        type: string
+        description: Metric name (e.g. api_request_duration_p99).
+      threshold:
+        type: number
+        description: Threshold value that was exceeded.
+      unit:
+        type: string
+        description: Unit of the metric (ms, %, rps, etc.).
+
+  - type: Mitigation
+    description: An action taken to stop or reduce the impact of an incident.
+    id_format: "mitigation:<slug>"
+    id_example: "mitigation:add-circuit-breaker-payment-api"
+    required:
+      description:
+        type: string
+        description: What was done.
+    optional:
+      mitigation_type:
+        type: string
+        enum: [temporary, permanent]
+        description: >
+          temporary = band-aid (root cause still present).
+          permanent = root cause addressed.
+      applied_at:
+        type: string
+        format: iso8601_utc
+
+  - type: CodePath
+    description: >
+      A specific file, function, or module in the codebase. The canonical
+      id uses the file path directly so graph-query can match PR diff
+      file paths without translation.
+    id_format: "code-path:<file-path>"
+    id_example: "code-path:src/payments/processor.py"
+    # File path slug rules: forward slashes preserved, no leading slash,
+    # dots preserved, spaces → hyphens.
+    required:
+      file_path:
+        type: string
+        description: Repo-relative file path (forward slashes, no leading slash).
+    optional:
+      function:
+        type: string
+        description: Specific function or method name within the file.
+      module:
+        type: string
+      language:
+        type: string
+      line_range:
+        type: string
+        description: "Affected line range (e.g. 120-145)."
+
+  - type: Incident
+    description: A specific production incident with a known identifier.
+    id_format: "incident:<id>"
+    id_example: "incident:INC-2024-001"
+    # <id> must match the id passed to save_incident in the memory backend.
+    required:
+      title:
+        type: string
+      occurred_at:
+        type: string
+        format: iso8601_utc
+    optional:
+      severity:
+        type: string
+        enum: [P0, P1, P2, P3]
+      postmortem_url:
+        type: string
+      duration_minutes:
+        type: integer
+      services_affected:
+        type: array
+        items: string
+
+  - type: Lesson
+    description: A distilled, searchable lesson derived from one or more incidents.
+    id_format: "lesson:<id>"
+    id_example: "lesson:LES-2024-001"
+    # <id> must match the id passed to save_lesson in the memory backend.
+    required:
+      text:
+        type: string
+        description: Concise lesson statement (≤ 280 chars recommended).
+      confidence:
+        type: number
+        minimum: 0.0
+        maximum: 1.0
+        description: Confidence weight. Raised by /addressed; not changed by /dismiss.
+      incident_id:
+        type: string
+        description: Primary incident this lesson was drawn from.
+    optional:
+      tags:
+        type: array
+        items: string
+      updated_at:
+        type: string
+        format: iso8601_utc
+      version:
+        type: integer
+        description: Incremented each time scribe rewrites this lesson.
+
+  - type: Pattern
+    description: >
+      A first-class pattern node promoted by the cartographer when a
+      threshold rule fires (see knowledge/patterns/). Pattern ids encode
+      their type and subject so they are human-readable in graph traversals.
+    id_format: "pattern:<pattern-type>:<slug>"
+    id_example: "pattern:hot-zone:src/payments/processor.py"
+    required:
+      pattern_type:
+        type: string
+        enum: [hot-zone, recurring, band-aid]
+      label:
+        type: string
+        description: Human-readable description of this pattern instance.
+      incident_count:
+        type: integer
+        description: Number of incidents that contributed to this pattern.
+    optional:
+      associated_files:
+        type: array
+        items: string
+      first_seen:
+        type: string
+        format: iso8601_utc
+      last_seen:
+        type: string
+        format: iso8601_utc
+      threshold_used:
+        type: integer
+        description: The threshold value from the pattern definition that triggered promotion.
+
+  - type: Hook
+    description: A lifecycle hook registered in hooks/hooks.yaml.
+    id_format: "hook:<name>"
+    id_example: "hook:bootstrap"
+    required:
+      name:
+        type: string
+      path:
+        type: string
+        description: Path to the hook definition file.
+    optional:
+      trigger:
+        type: string
+        description: Lifecycle event that fires this hook (bootstrap, teardown, etc.).
+      description:
+        type: string
+
+  - type: SkillFlow
+    description: A deterministic multi-step pipeline defined in skillflows/.
+    id_format: "skillflow:<name>"
+    id_example: "skillflow:ingest-incident"
+    required:
+      name:
+        type: string
+      path:
+        type: string
+        description: Path to the skillflow YAML file.
+    optional:
+      description:
+        type: string
+      steps:
+        type: array
+        items: string
+        description: Ordered list of skill or agent names in this flow.

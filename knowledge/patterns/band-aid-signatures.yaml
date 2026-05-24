@@ -1,0 +1,39 @@
+name: band-aid-signature
+version: "0.1.0"
+description: >
+  A Mitigation is a band-aid when the same mitigation has been applied
+  (resolved edge) in two or more distinct incidents AND the associated
+  RootCause has no satisfies edge from a permanent Mitigation. This
+  pattern detects the same temporary fix being reapplied without the
+  root cause ever being addressed. Architect-oracle cites band-aid
+  patterns when a PR touches an affected code path.
+
+# Promotion rule — declarative threshold, not a query.
+rule:
+  node_type: Mitigation
+  edge_type: resolved       # count Incident nodes this Mitigation has resolved
+  count_distinct: Incident  # each incident counted once per mitigation
+  threshold: 2              # >= 2 resolved incidents → candidate for promotion
+  # Promotion also requires that the RootCause linked via caused has no
+  # satisfies edge from any permanent Mitigation.
+  require_all:
+    - edge_type: caused
+      direction: inbound    # Mitigation ← (caused by) ← RootCause is not right;
+      # actually: a RootCause that caused one of the resolved incidents
+      # must lack a satisfies edge. Cartographer resolves this via the
+      # incident subgraph: find RootCause nodes that caused the resolved
+      # incidents, then check for satisfies edges.
+      linked_node_type: RootCause
+      linked_node_must_lack:
+        edge_type: satisfies
+        source_property:
+          mitigation_type: permanent
+
+# The promoted Pattern node inherits these properties.
+promoted_node:
+  type: Pattern
+  id_format: "pattern:band-aid:<mitigation-slug>"
+  pattern_type: band-aid
+  label_template: "Band-aid: <mitigation_description> reapplied <incident_count> times, root cause unresolved"
+
+demotion_threshold: 1  # drops below threshold or satisfies edge added → remove Pattern node
