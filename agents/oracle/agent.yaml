@@ -1,6 +1,10 @@
 name: oracle
 version: "0.1.0"
-model: claude-haiku-4-5-20251001
+model:
+  preferred: "anthropic:claude-haiku-4-5-20251001"
+  fallback:
+    - "openai:gpt-4o-mini"
+    - "groq:llama-3.1-8b-instant"
 description: >
   Routes PR check requests to the correct tier (jnr, snr, architect) based
   on graph match depth. Read-only — never posts comments or writes to any

@@ -1,6 +1,10 @@
 name: ingestor
 version: "0.1.0"
-model: claude-haiku-4-5-20251001
+model:
+  preferred: "anthropic:claude-haiku-4-5-20251001"
+  fallback:
+    - "openai:gpt-4o-mini"
+    - "groq:llama-3.1-8b-instant"
 description: >
   Fetches raw incident text from GitHub or uploaded files and saves it
   to the memory backend. Does not interpret content.

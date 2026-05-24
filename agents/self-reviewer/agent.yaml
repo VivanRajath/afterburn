@@ -1,6 +1,10 @@
 name: self-reviewer
 version: "0.1.0"
-model: claude-sonnet-4-6
+model:
+  preferred: "anthropic:claude-sonnet-4-5-20250929"
+  fallback:
+    - "openai:gpt-4o"
+    - "groq:llama-3.3-70b-versatile"
 description: >
   Audits past PR warnings against engineer outcomes, updates lesson
   confidence weights, and (weekly) replays past checks in sandbox.

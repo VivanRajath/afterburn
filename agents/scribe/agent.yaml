@@ -1,6 +1,10 @@
 name: scribe
 version: "0.1.0"
-model: claude-sonnet-4-6
+model:
+  preferred: "anthropic:claude-sonnet-4-5-20250929"
+  fallback:
+    - "openai:gpt-4o"
+    - "groq:llama-3.3-70b-versatile"
 description: >
   Distills incident patterns into lessons and saves them to the memory
   backend. Assigns confidence weights and LES-YYYY-NNN identifiers.

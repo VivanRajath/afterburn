@@ -1,6 +1,10 @@
 name: cartographer
 version: "0.1.0"
-model: claude-sonnet-4-6
+model:
+  preferred: "anthropic:claude-sonnet-4-5-20250929"
+  fallback:
+    - "openai:gpt-4o"
+    - "groq:llama-3.3-70b-versatile"
 description: >
   Merges extracted nodes and edges into the causal graph, detects pattern
   candidates, and writes the updated graph atomically. Must be safe to call

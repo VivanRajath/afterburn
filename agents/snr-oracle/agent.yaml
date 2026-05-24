@@ -1,6 +1,10 @@
 name: snr-oracle
 version: "0.1.0"
-model: claude-sonnet-4-6
+model:
+  preferred: "anthropic:claude-sonnet-4-5-20250929"
+  fallback:
+    - "openai:gpt-4o"
+    - "groq:llama-3.3-70b-versatile"
 description: >
   Handles PRs that match 1-2 past incidents or touch a hot-zone file.
   Posts a warning comment citing the relevant lesson and logs the outcome.
