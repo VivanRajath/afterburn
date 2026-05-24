@@ -24,6 +24,11 @@ npm-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# Next.js artifacts
+.next/
+out/
+.vercel
+
 # Editor / OS artifacts
 .DS_Store
 Thumbs.db
