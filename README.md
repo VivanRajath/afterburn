@@ -105,10 +105,17 @@ produces, and `examples/sample-pr/` for what a PR warning looks like in practice
 
 ### CLI via gitclaw
 
-afterburn exposes a natural-language REPL through the `ask` skill:
+afterburn exposes a natural-language REPL through the `ask` skill,
+backed by **Groq** (`llama-3.3-70b-versatile`):
 
 ```powershell
-# Set your API key, then:
+# 1. Install gitclaw
+npm install -g gitclaw
+
+# 2. Set your Groq API key (free tier works — get one at console.groq.com)
+$env:GROQ_API_KEY = "gsk_..."
+
+# 3. Launch the REPL
 npm run demo:cli
 # — or —
 gitclaw --dir agent
@@ -118,13 +125,13 @@ Sample prompts once the REPL starts:
 
 | Intent | Example prompt |
 |---|---|
-| List | `list incidents` |
-| Explain | `tell me about the payment processor incidents` |
-| Check | `what would happen if I changed src/payments/handler.py?` |
 | Meta | `what can you do?` |
+| List | `what incidents are there?` |
+| Explain | `tell me about the band-aid pattern` |
+| Check | `what would happen if I changed src/payments/handler.py?` |
 
-Requires `ANTHROPIC_API_KEY` in your environment. The `ask` skill is
-read-only — it queries the graph and surfaces warnings; it never writes.
+The `ask` skill is read-only — it queries the graph and surfaces warnings;
+it never writes.
 
 ## Roadmap
 

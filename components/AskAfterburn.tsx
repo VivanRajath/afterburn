@@ -1,4 +1,4 @@
-'use client';
+  'use client';
 
 import { useState } from 'react';
 import TierBadge from '@/components/TierBadge';
@@ -59,12 +59,12 @@ export default function AskAfterburn({ selectedModel, diff, onDiffChange, onResu
       />
 
       <div className="mt-3 flex gap-2 flex-wrap">
-        <button
+        {/* <button
           onClick={loadSample}
           className="px-3 py-2 text-xs font-medium border border-slate-300 rounded text-slate-700 hover:bg-slate-50 transition-colors"
         >
           Load sample PR diff
-        </button>
+        </button> */}
         <button
           onClick={handleCheck}
           disabled={loading || !diff.trim()}

@@ -1,12 +1,12 @@
 {
   "version": "0.1.0",
-  "updated_at": "2026-05-25T05:31:02.266Z",
+  "updated_at": "2026-05-25T18:21:26.923Z",
   "nodes": [
     {
       "id": "incident:7efe43803f3e",
       "type": "Incident",
       "properties": {
-        "id": "incident:7efe43803f3e",
+        "id": "7efe43803f3e",
         "summary": "A customer reported a critical issue in the PostHog SDK's Fetch API wrapper that rendered their site unusable.",
         "status": "resolved",
         "severity": "critical",
@@ -23,7 +23,7 @@
       "id": "service:posthog-js",
       "type": "Service",
       "properties": {
-        "name": "PostHog SDK"
+        "name": "PostHog SDK for JavaScript"
       }
     },
     {
@@ -38,7 +38,7 @@
       "id": "root-cause:simplistic-fetch-wrapper",
       "type": "RootCause",
       "properties": {
-        "description": "The SDK fetch wrapper was too simplistic and did not pass on request options that are sometimes required"
+        "description": "SDK fetch wrapper too simplistic, does not pass request options that are sometimes required"
       }
     },
     {
@@ -76,7 +76,7 @@
       "id": "service:cdn",
       "type": "Service",
       "properties": {
-        "name": "PostHog CDN"
+        "name": "PostHog CDN Service"
       }
     },
     {
@@ -84,7 +84,8 @@
       "type": "Service",
       "properties": {
         "id": "service:posthog-feature-flags",
-        "name": "PostHog Feature Flags Service"
+        "name": "PostHog Feature Flags Service",
+        "description": "PostHog Feature Flags Service"
       }
     },
     {
@@ -92,7 +93,7 @@
       "type": "Error",
       "properties": {
         "id": "error:redis-overload",
-        "description": "Redis Overload",
+        "description": "Redis overload from excessive parallelism and connection pool exhaustion",
         "name": "Redis Overload",
         "band_aid_candidate": true
       }
@@ -114,7 +115,7 @@
       "type": "Symptom",
       "properties": {
         "id": "symptom:excessive-parallelism",
-        "description": "Excessive parallelism causing connection pool exhaustion",
+        "description": "Excessive parallelism and connection pool exhaustion leading to Redis overload",
         "name": "Excessive Parallelism"
       }
     },
@@ -134,7 +135,7 @@
         "date": "October 2025",
         "band_aid_candidate": true,
         "id": "mitigation:cpu-right-sizing",
-        "description": "CPU right sizing resolved underlying issues"
+        "description": "CPU right-sizing to reduce excessive parallelism and connection pool exhaustion"
       }
     },
     {
@@ -154,7 +155,7 @@
         "impact": "Over 14 hours across four incidents (errors or severe latency)",
         "services": "PostHog Feature Flags Service",
         "incident_id": "3310de46aa7d",
-        "description": "PostHog Feature Flags Service experienced multiple outages in October 2025",
+        "description": "PostHog Feature Flags Service multiple outages in October 2025",
         "summary": "PostHog Feature Flags Service - Multiple Outages (October 2025)"
       }
     },
@@ -171,7 +172,8 @@
       "id": "error:typeerror",
       "type": "Error",
       "properties": {
-        "title": "TypeError"
+        "title": "TypeError",
+        "message": "TypeError: RequestInit is not supported with a body of type ReadableStream"
       }
     },
     {
@@ -263,7 +265,7 @@
       "type": "RootCause",
       "properties": {
         "id": "root-cause:cpu-resource-undersizing",
-        "description": "CPU resource undersizing causing excessive parallelism and connection pool exhaustion",
+        "description": "CPU resource sizing issues causing excessive parallelism and connection pool exhaustion",
         "name": "CPU Resource Undersizing"
       }
     },
@@ -274,7 +276,8 @@
         "id": "code-path:src/payments/handler.py",
         "file_path": "src/payments/handler.py",
         "functionality": "Handles payments functionality",
-        "original_path": "src/payments/handler.py"
+        "original_path": "src/payments/handler.py",
+        "description": "Source code for payment handler in Python"
       }
     },
     {
@@ -492,6 +495,479 @@
       "properties": {
         "id": "3310de46aa7d-incident-29-30-2025",
         "summary": "October 29-30 Incident - CPU-Bound Latency"
+      }
+    },
+    {
+      "id": "incident:0ba68a1e7506",
+      "type": "Incident",
+      "properties": {
+        "date": "2026 03 26"
+      }
+    },
+    {
+      "id": "service:chia-rs",
+      "type": "Service",
+      "properties": {}
+    },
+    {
+      "id": "service:clvm",
+      "type": "Service",
+      "properties": {
+        "name": "CLVM implementation"
+      }
+    },
+    {
+      "id": "service:chia-blockchain",
+      "type": "Service",
+      "properties": {}
+    },
+    {
+      "id": "error:unsolicited-work",
+      "type": "Error",
+      "properties": {
+        "category": "Peer to peer"
+      }
+    },
+    {
+      "id": "error:rate-limit-violation",
+      "type": "Error",
+      "properties": {
+        "category": "Peer to peer"
+      }
+    },
+    {
+      "id": "error:log-injection",
+      "type": "Error",
+      "properties": {
+        "category": "Peer to peer"
+      }
+    },
+    {
+      "id": "error:invalid-vdf-proof",
+      "type": "Error",
+      "properties": {
+        "category": "Timelord"
+      }
+    },
+    {
+      "id": "error:wallet-registration-crash",
+      "type": "Error",
+      "properties": {
+        "category": "Full node"
+      }
+    },
+    {
+      "id": "error:request-tracking-memory-leak",
+      "type": "Error",
+      "properties": {
+        "category": "Full node"
+      }
+    },
+    {
+      "id": "error:delta-file-parsing",
+      "type": "Error",
+      "properties": {
+        "category": "Data layer"
+      }
+    },
+    {
+      "id": "error:plugin-download-hang",
+      "type": "Error",
+      "properties": {
+        "category": "Data layer"
+      }
+    },
+    {
+      "id": "error:amount-parsing-inconsistency",
+      "type": "Error",
+      "properties": {
+        "category": "Rust"
+      }
+    },
+    {
+      "id": "symptom:malicious-transaction",
+      "type": "Symptom",
+      "properties": {}
+    },
+    {
+      "id": "symptom:peer-flood",
+      "type": "Symptom",
+      "properties": {
+        "category": "Peer to peer"
+      }
+    },
+    {
+      "id": "symptom:invalid-block",
+      "type": "Symptom",
+      "properties": {
+        "category": "CLVM"
+      }
+    },
+    {
+      "id": "mitigation:peer-validation",
+      "type": "Mitigation",
+      "properties": {
+        "effect": "accept only matching responses",
+        "target": "respond_transaction",
+        "band_aid_candidate": true
+      }
+    },
+    {
+      "id": "mitigation:rate-limit-enforcement",
+      "type": "Mitigation",
+      "properties": {
+        "effect": "disconnect & ban abusive peers",
+        "target": "Peer to peer",
+        "band_aid_candidate": true
+      }
+    },
+    {
+      "id": "mitigation:unknown-protocol-handling",
+      "type": "Mitigation",
+      "properties": {
+        "effect": "handle unknown types with strict handling",
+        "target": "Peer to peer"
+      }
+    },
+    {
+      "id": "mitigation:logsanitization",
+      "type": "Mitigation",
+      "properties": {
+        "effect": "sanitize handshake version string",
+        "band_aid_candidate": true
+      }
+    },
+    {
+      "id": "mitigation:optimal-allocation",
+      "type": "Mitigation",
+      "properties": {
+        "effect": "avoid eager allocation",
+        "target": "Coin subscription registration"
+      }
+    },
+    {
+      "id": "mitigation:invalid-vdf-broadcast",
+      "type": "Mitigation",
+      "properties": {
+        "effect": "do not broadcast invalid proofs",
+        "target": "Timelord",
+        "band_aid_candidate": true
+      }
+    },
+    {
+      "id": "mitigation:request-tracking-optimization",
+      "type": "Mitigation",
+      "properties": {
+        "effect": "remove permanent entries on rejection",
+        "band_aid_candidate": true
+      }
+    },
+    {
+      "id": "mitigation:delta-file-guards",
+      "type": "Mitigation",
+      "properties": {
+        "effect": "add maximum size guards",
+        "target": "Delta / tree file parsing",
+        "band_aid_candidate": true
+      }
+    },
+    {
+      "id": "mitigation:plugin-timeout",
+      "type": "Mitigation",
+      "properties": {
+        "effect": "apply consistent client timeouts",
+        "target": "Plugin based downloads",
+        "band_aid_candidate": true
+      }
+    },
+    {
+      "id": "code-path:src-chia-rs-amount-rs",
+      "type": "CodePath",
+      "properties": {
+        "location": "Rust (`chia_rs`)",
+        "original_path": "src/chia/rs/amount.rs"
+      }
+    },
+    {
+      "id": "code-path:src-chia-clvm-prim-point-rs",
+      "type": "CodePath",
+      "properties": {
+        "location": "CLVM (`clvm`)",
+        "original_path": "src/chia/clvm/prim/point.rs"
+      }
+    },
+    {
+      "id": "service:chiablockchain",
+      "type": "Service",
+      "properties": {
+        "name": "Chia blockchain 2.6.0"
+      }
+    },
+    {
+      "id": "error:cpuexhaustion",
+      "type": "Error",
+      "properties": {
+        "description": "CPU exhaustion from dishonest transaction advertisement",
+        "prevention": "Fairer queue scheduling to prevent single peer monopolization"
+      }
+    },
+    {
+      "id": "service:newtransaction",
+      "type": "Service",
+      "properties": {
+        "name": "New transaction message"
+      }
+    },
+    {
+      "id": "mitigation:transactiongossipfairness",
+      "type": "Mitigation",
+      "properties": {
+        "id": "2026-02-11",
+        "description": "Require advertised cost and fee to match node computation",
+        "trigger": "Misrepresented transaction cost or fee",
+        "band_aid_candidate": true
+      }
+    },
+    {
+      "id": "trigger:misrepresentedadvertisement",
+      "type": "Trigger",
+      "properties": {
+        "description": "Peer misrepresents transaction cost or fee"
+      }
+    },
+    {
+      "id": "root-cause:misleadingtransaction",
+      "type": "RootCause",
+      "properties": {
+        "description": "Peers advertise transactions with misleading cost or fee information",
+        "symptoms": [
+          "CpuExhaustion"
+        ]
+      }
+    },
+    {
+      "id": "symptom:cpuexhaustion",
+      "type": "Symptom",
+      "properties": {
+        "description": "CPU exhaustion due to denial of service attack"
+      }
+    },
+    {
+      "id": "mitigation:strictergeneratorrules",
+      "type": "Mitigation",
+      "properties": {
+        "id": "2026-02-11",
+        "description": "Stricter block generator rules",
+        "trigger": "Denial of service risk",
+        "band_aid_candidate": true
+      }
+    },
+    {
+      "id": "trigger:denialofservice",
+      "type": "Trigger",
+      "properties": {
+        "description": "Denial of service risk to the network"
+      }
+    },
+    {
+      "id": "root-cause:denialofservice",
+      "type": "RootCause",
+      "properties": {
+        "description": "Denial of service risk due to flexible block generator rules",
+        "symptoms": [
+          "CpuExhaustion"
+        ]
+      }
+    },
+    {
+      "id": "mitigation:modularexponentiationrejection",
+      "type": "Mitigation",
+      "properties": {
+        "id": "2026-02-11",
+        "description": "Reject modular exponentiation operations in mempool",
+        "trigger": "Pathological operand sizes",
+        "band_aid_candidate": true
+      }
+    },
+    {
+      "id": "trigger:pathologicaloperandsizes",
+      "type": "Trigger",
+      "properties": {
+        "description": "Pathological operand sizes that burn disproportionate CPU"
+      }
+    },
+    {
+      "id": "root-cause:pathologicaloperandsizes",
+      "type": "RootCause",
+      "properties": {
+        "description": "Pathological operand sizes in division related operators",
+        "symptoms": [
+          "CpuExhaustion"
+        ]
+      }
+    },
+    {
+      "id": "incident:ec1ade055123",
+      "type": "Incident",
+      "properties": {
+        "id": "2026-02-11",
+        "description": "Security related fixes and mitigations in Chia blockchain 2.6.0"
+      }
+    },
+    {
+      "id": "code-path:src-consensus-stack-rs",
+      "type": "CodePath",
+      "properties": {
+        "file_path": "src/consensus/stack.rs",
+        "description": "Strict generator rules in the Rust consensus stack",
+        "original_path": "src/consensus/stack.rs"
+      }
+    },
+    {
+      "id": "service:chia-net",
+      "type": "Service",
+      "properties": {
+        "name": "Chia Network Website"
+      }
+    },
+    {
+      "id": "services:github-enterprise",
+      "type": "Service",
+      "properties": {}
+    },
+    {
+      "id": "error:ci-system-failure",
+      "type": "Error",
+      "properties": {
+        "description": "CI system encountered a fatal error"
+      }
+    },
+    {
+      "id": "error:ci-pipeline-bug",
+      "type": "Error",
+      "properties": {
+        "description": "Stalled CI pipeline due to bug"
+      }
+    },
+    {
+      "id": "root-cause:ci-system-bug",
+      "type": "RootCause",
+      "properties": {
+        "description": "A bug in the Github CI process was the root cause of the issue"
+      }
+    },
+    {
+      "id": "symptom:website-outage",
+      "type": "Symptom",
+      "properties": {
+        "description": "Chia Network Website was down"
+      }
+    },
+    {
+      "id": "mitigation:manual-ci-reengagement",
+      "type": "Mitigation",
+      "properties": {
+        "description": "Github support engineers reengaged the underlying CI process manually",
+        "band_aid_candidate": true
+      }
+    },
+    {
+      "id": "code-path:src-website-deployment-py",
+      "type": "CodePath",
+      "properties": {
+        "original_path": "src/website/deployment.py"
+      }
+    },
+    {
+      "id": "incident:4f47bd4d0d7a",
+      "type": "Incident"
+    },
+    {
+      "id": "trigger:github-pages-redeployment",
+      "type": "Trigger",
+      "properties": {}
+    },
+    {
+      "id": "trigger:default-branch-renaming",
+      "type": "Trigger",
+      "properties": {
+        "name": "Renaming the default branch from master to main"
+      }
+    },
+    {
+      "id": "service:posthog-cdn",
+      "type": "service"
+    },
+    {
+      "id": "root-cause:fetch-wrapper",
+      "type": "root-cause"
+    },
+    {
+      "id": "root-cause:fetch-wrapper-simulation",
+      "type": "root-cause"
+    },
+    {
+      "id": "symptom:mismatched-form-data-boundaries",
+      "type": "symptom"
+    },
+    {
+      "id": "symptom:request-body-consumed-multiple-times",
+      "type": "symptom"
+    },
+    {
+      "id": "symptom:fetch-requests-failing",
+      "type": "symptom"
+    },
+    {
+      "id": "mitigation:roll-back-changes",
+      "type": "mitigation"
+    },
+    {
+      "id": "mitigation:add-verification-step",
+      "type": "mitigation"
+    },
+    {
+      "id": "code-path:src-posthog-js-fetch-wrapper-ts-v1-327-0",
+      "type": "code-path"
+    },
+    {
+      "id": "code-path:src-posthog-js-fetch-wrapper-ts-v1-328-0",
+      "type": "code-path"
+    },
+    {
+      "id": "symptom:broken-fetch-requests",
+      "type": "Symptom",
+      "properties": {
+        "description": "Fetch requests fail with TypeError"
+      }
+    },
+    {
+      "id": "mitigation:rollback-fetch-changes",
+      "type": "Mitigation",
+      "properties": {
+        "description": "Roll back all recent changes to the fetch wrapper"
+      }
+    },
+    {
+      "id": "error:429-errors",
+      "type": "Error",
+      "properties": {
+        "description": "Rate limiting misconfiguration causing 429 errors"
+      }
+    },
+    {
+      "id": "symptom:slow-queries",
+      "type": "Symptom",
+      "properties": {
+        "description": "Slow queries and degraded performance due to CPU pressure"
+      }
+    },
+    {
+      "id": "code-path:src-posthog-flags-service-go",
+      "type": "CodePath",
+      "properties": {
+        "description": "Feature flags service code in src/posthog/flags/service.go",
+        "original_path": "src/posthog/flags/service.go"
       }
     }
   ],
@@ -910,6 +1386,401 @@
       "source": "incident:3310de46aa7d-incident-24-2025",
       "target": "service:posthog-feature-flags",
       "type": "caused"
+    },
+    {
+      "source": "incident:0ba68a1e7506",
+      "target": "service:chia-rs",
+      "type": "touched"
+    },
+    {
+      "source": "incident:0ba68a1e7506",
+      "target": "service:clvm",
+      "type": "touched"
+    },
+    {
+      "source": "incident:0ba68a1e7506",
+      "target": "service:chia-blockchain",
+      "type": "touched"
+    },
+    {
+      "source": "incident:0ba68a1e7506",
+      "target": "error:unsolicited-work",
+      "type": "caused"
+    },
+    {
+      "source": "incident:0ba68a1e7506",
+      "target": "error:rate-limit-violation",
+      "type": "caused"
+    },
+    {
+      "source": "incident:0ba68a1e7506",
+      "target": "error:log-injection",
+      "type": "caused"
+    },
+    {
+      "source": "incident:0ba68a1e7506",
+      "target": "error:invalid-vdf-proof",
+      "type": "caused"
+    },
+    {
+      "source": "incident:0ba68a1e7506",
+      "target": "error:wallet-registration-crash",
+      "type": "caused"
+    },
+    {
+      "source": "incident:0ba68a1e7506",
+      "target": "error:request-tracking-memory-leak",
+      "type": "caused"
+    },
+    {
+      "source": "incident:0ba68a1e7506",
+      "target": "error:delta-file-parsing",
+      "type": "caused"
+    },
+    {
+      "source": "incident:0ba68a1e7506",
+      "target": "error:plugin-download-hang",
+      "type": "caused"
+    },
+    {
+      "source": "incident:0ba68a1e7506",
+      "target": "error:amount-parsing-inconsistency",
+      "type": "caused"
+    },
+    {
+      "source": "error:unsolicited-work",
+      "target": "mitigation:peer-validation",
+      "type": "resolved"
+    },
+    {
+      "source": "error:rate-limit-violation",
+      "target": "mitigation:rate-limit-enforcement",
+      "type": "resolved"
+    },
+    {
+      "source": "error:log-injection",
+      "target": "mitigation:logsanitization",
+      "type": "resolved"
+    },
+    {
+      "source": "error:invalid-vdf-proof",
+      "target": "mitigation:invalid-vdf-broadcast",
+      "type": "resolved"
+    },
+    {
+      "source": "error:wallet-registration-crash",
+      "target": "mitigation:request-tracking-optimization",
+      "type": "resolved"
+    },
+    {
+      "source": "error:request-tracking-memory-leak",
+      "target": "mitigation:request-tracking-optimization",
+      "type": "resolved"
+    },
+    {
+      "source": "error:delta-file-parsing",
+      "target": "mitigation:delta-file-guards",
+      "type": "resolved"
+    },
+    {
+      "source": "error:plugin-download-hang",
+      "target": "mitigation:plugin-timeout",
+      "type": "resolved"
+    },
+    {
+      "source": "error:amount-parsing-inconsistency",
+      "target": "code-path:src-chia-rs-amount-rs",
+      "type": "depends_on"
+    },
+    {
+      "source": "error:amount-parsing-inconsistency",
+      "target": "code-path:src-chia-clvm-prim-point-rs",
+      "type": "depends_on"
+    },
+    {
+      "source": "incident:ec1ade055123",
+      "target": "root-cause:misleadingtransaction",
+      "type": "caused"
+    },
+    {
+      "source": "root-cause:misleadingtransaction",
+      "target": "symptom:cpuexhaustion",
+      "type": "manifested_as"
+    },
+    {
+      "source": "incident:ec1ade055123",
+      "target": "mitigation:transactiongossipfairness",
+      "type": "resolved"
+    },
+    {
+      "source": "service:newtransaction",
+      "target": "incident:ec1ade055123",
+      "type": "touched"
+    },
+    {
+      "source": "incident:ec1ade055123",
+      "target": "code-path:src-consensus-stack-rs",
+      "type": "touched"
+    },
+    {
+      "source": "incident:ec1ade055123",
+      "target": "service:clvm",
+      "type": "touched"
+    },
+    {
+      "source": "incident:ec1ade055123",
+      "target": "service:newtransaction",
+      "type": "satisfied_by"
+    },
+    {
+      "source": "incident:ec1ade055123",
+      "target": "service:clvm",
+      "type": "satisfied_by"
+    },
+    {
+      "source": "service:clvm",
+      "target": "root-cause:pathologicaloperandsizes",
+      "type": "caused"
+    },
+    {
+      "source": "service:clvm",
+      "target": "symptom:cpuexhaustion",
+      "type": "manifested_as"
+    },
+    {
+      "source": "root-cause:pathologicaloperandsizes",
+      "target": "symptom:cpuexhaustion",
+      "type": "manifested_as"
+    },
+    {
+      "source": "incident:ec1ade055123",
+      "target": "mitigation:modularexponentiationrejection",
+      "type": "resolved"
+    },
+    {
+      "source": "service:clvm",
+      "target": "incident:ec1ade055123",
+      "type": "touched"
+    },
+    {
+      "source": "root-cause:denialofservice",
+      "target": "symptom:cpuexhaustion",
+      "type": "manifested_as"
+    },
+    {
+      "source": "incident:ec1ade055123",
+      "target": "mitigation:strictergeneratorrules",
+      "type": "resolved"
+    },
+    {
+      "source": "service:clvm",
+      "target": "root-cause:pathologicaloperandsizes",
+      "type": "touched"
+    },
+    {
+      "source": "incident:4f47bd4d0d7a",
+      "target": "service:chia-net",
+      "type": "caused"
+    },
+    {
+      "source": "incident:4f47bd4d0d7a",
+      "target": "root-cause:ci-system-bug",
+      "type": "manifested_as"
+    },
+    {
+      "source": "service:chia-net",
+      "target": "services:github-enterprise",
+      "type": "touched"
+    },
+    {
+      "source": "services:github-enterprise",
+      "target": "error:ci-system-failure",
+      "type": "caused"
+    },
+    {
+      "source": "error:ci-system-failure",
+      "target": "error:ci-pipeline-bug",
+      "type": "satisfies"
+    },
+    {
+      "source": "services:github-enterprise",
+      "target": "root-cause:ci-system-bug",
+      "type": "satisfies"
+    },
+    {
+      "source": "incident:4f47bd4d0d7a",
+      "target": "symptom:website-outage",
+      "type": "manifested_as"
+    },
+    {
+      "source": "symptom:website-outage",
+      "target": "mitigation:manual-ci-reengagement",
+      "type": "resolved"
+    },
+    {
+      "source": "incident:4f47bd4d0d7a",
+      "target": "mitigation:manual-ci-reengagement",
+      "type": "resolved"
+    },
+    {
+      "source": "service:chia-net",
+      "target": "trigger:github-pages-redeployment",
+      "type": "depends_on"
+    },
+    {
+      "source": "trigger:github-pages-redeployment",
+      "target": "root-cause:ci-system-bug",
+      "type": "caused"
+    },
+    {
+      "source": "code-path:src-website-deployment-py",
+      "target": "incident:4f47bd4d0d7a",
+      "type": "depends_on"
+    },
+    {
+      "source": "incident:7efe43803f3e",
+      "target": "service:posthog-js",
+      "type": "touched"
+    },
+    {
+      "source": "service:posthog-js",
+      "target": "service:posthog-cdn",
+      "type": "depends_on"
+    },
+    {
+      "source": "service:posthog-cdn",
+      "target": "code-path:src-posthog-js-fetch-wrapper-ts",
+      "type": "depends_on"
+    },
+    {
+      "source": "root-cause:fetch-wrapper",
+      "target": "error:typeerror",
+      "type": "caused"
+    },
+    {
+      "source": "root-cause:fetch-wrapper-simulation",
+      "target": "error:typeerror",
+      "type": "caused"
+    },
+    {
+      "source": "symptom:mismatched-form-data-boundaries",
+      "target": "error:typeerror",
+      "type": "manifested_as"
+    },
+    {
+      "source": "symptom:request-body-consumed-multiple-times",
+      "target": "error:typeerror",
+      "type": "manifested_as"
+    },
+    {
+      "source": "symptom:fetch-requests-failing",
+      "target": "error:typeerror",
+      "type": "manifested_as"
+    },
+    {
+      "source": "error:typeerror",
+      "target": "incident:7efe43803f3e",
+      "type": "caused"
+    },
+    {
+      "source": "root-cause:fetch-wrapper-simulation",
+      "target": "mitigation:roll-back-changes",
+      "type": "caused"
+    },
+    {
+      "source": "incident:7efe43803f3e",
+      "target": "code-path:src-posthog-js-fetch-wrapper-ts-v1-327-0",
+      "type": "touched"
+    },
+    {
+      "source": "incident:7efe43803f3e",
+      "target": "code-path:src-posthog-js-fetch-wrapper-ts-v1-328-0",
+      "type": "touched"
+    },
+    {
+      "source": "incident:7efe43803f3e",
+      "target": "service:cdn",
+      "type": "touched"
+    },
+    {
+      "source": "service:posthog-js",
+      "target": "error:typeerror",
+      "type": "caused"
+    },
+    {
+      "source": "error:typeerror",
+      "target": "root-cause:simplistic-fetch-wrapper",
+      "type": "manifested_as"
+    },
+    {
+      "source": "root-cause:simplistic-fetch-wrapper",
+      "target": "symptom:broken-fetch-requests",
+      "type": "caused"
+    },
+    {
+      "source": "incident:7efe43803f3e",
+      "target": "symptom:broken-fetch-requests",
+      "type": "manifested_as"
+    },
+    {
+      "source": "root-cause:simplistic-fetch-wrapper",
+      "target": "service:posthog-js",
+      "type": "respects"
+    },
+    {
+      "source": "service:posthog-js",
+      "target": "code-path:src-payments-handler-py",
+      "type": "depends_on"
+    },
+    {
+      "source": "incident:7efe43803f3e",
+      "target": "mitigation:rollback-fetch-changes",
+      "type": "resolves"
+    },
+    {
+      "source": "mitigation:rollback-fetch-changes",
+      "target": "service:posthog-js",
+      "type": "applied_to"
+    },
+    {
+      "source": "mitigation:rollback-fetch-changes",
+      "target": "service:cdn",
+      "type": "applied_to"
+    },
+    {
+      "source": "service:posthog-feature-flags",
+      "target": "error:redis-overload",
+      "type": "caused"
+    },
+    {
+      "source": "root-cause:cpu-resource-undersizing",
+      "target": "symptom:excessive-parallelism",
+      "type": "causes"
+    },
+    {
+      "source": "symptom:excessive-parallelism",
+      "target": "symptom:slow-queries",
+      "type": "manifests_as"
+    },
+    {
+      "source": "error:429-errors",
+      "target": "root-cause:cpu-resource-undersizing",
+      "type": "unrelated"
+    },
+    {
+      "source": "root-cause:cpu-resource-undersizing",
+      "target": "mitigation:cpu-right-sizing",
+      "type": "satisfies"
+    },
+    {
+      "source": "mitigation:cpu-right-sizing",
+      "target": "incident:3310de46aa7d",
+      "type": "resolved"
+    },
+    {
+      "source": "incident:3310de46aa7d",
+      "target": "code-path:src-posthog-flags-service-go",
+      "type": "touched"
     }
   ]
 }
