@@ -1,24 +1,24 @@
-diff --git a/src/payments/webhook_handler.py b/src/payments/webhook_handler.py
+diff --git a/src/payments/handler.py b/src/payments/handler.py
 index a3c1f2b..d4e5a9f 100644
---- a/src/payments/webhook_handler.py
-+++ b/src/payments/webhook_handler.py
+--- a/src/payments/handler.py
++++ b/src/payments/handler.py
 @@ -1,6 +1,7 @@
  import logging
  from typing import Optional
  from sqlalchemy.orm import Session
 +from sqlalchemy import text
- from .models import WebhookEvent, PaymentRecord
- from .exceptions import WebhookProcessingError
+ from .models import PaymentRecord
+ from .exceptions import PaymentProcessingError
 
-@@ -14,10 +15,24 @@ class WebhookHandler:
+@@ -14,10 +15,24 @@ class PaymentHandler:
 
      def process(self, event: dict) -> None:
-         event_id = event.get("id")
-         if not event_id:
-             raise ValueError("Stripe event missing id field")
--        existing = self.db.query(WebhookEvent).filter_by(stripe_event_id=event_id).first()
-+        existing = self.db.query(WebhookEvent).filter(
-+            WebhookEvent.stripe_event_id == event_id
+         charge_id = event.get("charge")
+         if not charge_id:
+             raise ValueError("Payment event missing charge id")
+-        existing = self.db.query(PaymentRecord).filter_by(stripe_charge_id=charge_id).first()
++        existing = self.db.query(PaymentRecord).filter(
++            PaymentRecord.stripe_charge_id == charge_id
 +        ).first()
          if existing:
              return
@@ -27,7 +27,7 @@ index a3c1f2b..d4e5a9f 100644
 +        """Handle Stripe charge.refunded events."""
 +        charge_id = event.get("data", {}).get("object", {}).get("charge")
 +        if not charge_id:
-+            raise WebhookProcessingError("refund event missing charge id")
++            raise PaymentProcessingError("refund event missing charge id")
 +        record = self.db.query(PaymentRecord).filter_by(
 +            stripe_charge_id=charge_id
 +        ).first()
@@ -37,3 +37,24 @@ index a3c1f2b..d4e5a9f 100644
 +        record.status = "refunded"
 +        self.db.commit()
 +        return record
+diff --git a/src/replay/fetch_wrapper.ts b/src/replay/fetch_wrapper.ts
+index b7c3d8e..f1a2b3c 100644
+--- a/src/replay/fetch_wrapper.ts
++++ b/src/replay/fetch_wrapper.ts
+@@ -1,8 +1,12 @@
+ import { PostHog } from '../posthog-core'
+
+ export class FetchWrapper {
+-  private readonly maxBodySize = 1_000_000
++  private readonly maxBodySize = 500_000
++  private readonly timeout = 5000
+
+   wrap(fetch: typeof globalThis.fetch): typeof globalThis.fetch {
+     return async (input, init) => {
++      const controller = new AbortController()
++      const timer = setTimeout(() => controller.abort(), this.timeout)
+       const response = await fetch(input, init)
++      clearTimeout(timer)
+       return response
+     }
+   }

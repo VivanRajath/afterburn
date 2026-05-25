@@ -16,6 +16,7 @@ export default function Page() {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [lastCheckResult, setLastCheckResult] = useState<CheckResult | null>(null);
   const [showStaleBanner, setShowStaleBanner] = useState(false);
+  const [diff, setDiff] = useState('');
 
   const handleRepoSuccess = useCallback(async (stats: RepoStats) => {
     setShowStaleBanner(false);
@@ -51,10 +52,13 @@ export default function Page() {
           selectedNodeId={selectedNodeId}
           onSelectNode={setSelectedNodeId}
           highlightedNodeIds={lastCheckResult?.matched_node_ids}
+          diff={diff}
         />
 
         <AskAfterburn
           selectedModel={selectedModel}
+          diff={diff}
+          onDiffChange={setDiff}
           onResult={setLastCheckResult}
           lastResult={lastCheckResult}
         />

@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
         if (pat.id) matched.add(pat.id);
       }
       for (const f of result.changed_files ?? []) matched.add(`code-path:${slugify(f)}`);
-      matched_node_ids = [...matched];
+      matched_node_ids = Array.from(matched);
     } catch {
       // leave defaults
     }

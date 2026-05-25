@@ -6,18 +6,19 @@ import type { CheckResult, Model } from '@/lib/types';
 
 interface AskAfterburnProps {
   selectedModel: Model;
+  diff: string;
+  onDiffChange: (diff: string) => void;
   onResult: (result: CheckResult) => void;
   lastResult: CheckResult | null;
 }
 
-export default function AskAfterburn({ selectedModel, onResult, lastResult }: AskAfterburnProps) {
-  const [diff, setDiff] = useState('');
+export default function AskAfterburn({ selectedModel, diff, onDiffChange, onResult, lastResult }: AskAfterburnProps) {
   const [loading, setLoading] = useState(false);
 
   async function loadSample() {
     const res = await fetch('/api/sample-diff');
     const text = await res.text();
-    setDiff(text);
+    onDiffChange(text);
   }
 
   async function handleCheck() {
@@ -50,7 +51,7 @@ export default function AskAfterburn({ selectedModel, onResult, lastResult }: As
 
       <textarea
         value={diff}
-        onChange={(e) => setDiff(e.target.value)}
+        onChange={(e) => onDiffChange(e.target.value)}
         placeholder="Paste a unified diff here..."
         rows={7}
         className="mt-4 w-full border border-slate-300 rounded px-3 py-2 text-xs font-mono text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent resize-none"

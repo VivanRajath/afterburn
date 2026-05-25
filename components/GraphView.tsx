@@ -4,6 +4,7 @@ import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import NodePanel from '@/components/NodePanel';
 import type { GraphData, GraphNode } from '@/lib/types';
+import { extractSnippetForFile, findFileForCodePath } from '@/lib/diff-snippet';
 
 const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), {
   ssr: false,
@@ -29,12 +30,14 @@ interface GraphViewProps {
   selectedNodeId: string | null;
   onSelectNode: (id: string | null) => void;
   highlightedNodeIds?: string[];
+  diff?: string;
 }
 
-export default function GraphView({ graphData, selectedNodeId, onSelectNode, highlightedNodeIds }: GraphViewProps) {
+export default function GraphView({ graphData, selectedNodeId, onSelectNode, highlightedNodeIds, diff }: GraphViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [graphWidth, setGraphWidth] = useState(700);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
 
   // Measure container width, re-measure when panel opens/closes
   useEffect(() => {
@@ -132,6 +135,32 @@ export default function GraphView({ graphData, selectedNodeId, onSelectNode, hig
 
   const selectedNode = graphData?.nodes.find((n) => n.id === selectedNodeId) ?? null;
 
+  // Compute tooltip content whenever hovered node or diff changes
+  const tooltipContent = useMemo(() => {
+    if (!hoveredNodeId || !diff || !diff.trim()) return null;
+    const node = graphData?.nodes.find((n) => n.id === hoveredNodeId);
+    if (!node) return null;
+
+    const isHighlighted = highlightSet?.has(hoveredNodeId) ?? false;
+
+    if (node.type === 'CodePath' && isHighlighted) {
+      const filePath = findFileForCodePath(diff, hoveredNodeId);
+      const snippet = filePath ? extractSnippetForFile(diff, filePath) : null;
+      return { kind: 'codepath' as const, filePath: filePath ?? hoveredNodeId.replace('code-path:', ''), snippet };
+    }
+
+    if (node.type === 'Incident' && isHighlighted) {
+      const title = (node.properties?.title as string | undefined)
+        ?? (node.properties?.summary as string | undefined)?.split(' ').slice(0, 8).join(' ')
+        ?? node.id;
+      const summary = (node.properties?.summary as string | undefined)?.slice(0, 160);
+      return { kind: 'incident' as const, title, summary };
+    }
+
+    // Dimmed or other node types — show basic info
+    return { kind: 'basic' as const, type: node.type, name: node.name ?? node.id };
+  }, [hoveredNodeId, diff, graphData, highlightSet]);
+
   return (
     <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
       {/* Card header */}
@@ -150,9 +179,17 @@ export default function GraphView({ graphData, selectedNodeId, onSelectNode, hig
       </div>
 
       {/* Graph area */}
-      <div className="flex" style={{ height: 560 }}>
+      <div className="flex relative" style={{ height: 560 }}>
         {/* Canvas */}
-        <div ref={containerRef} className="flex-1 bg-slate-900 overflow-hidden">
+        <div
+          ref={containerRef}
+          className="flex-1 bg-slate-900 overflow-hidden"
+          onMouseMove={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+          }}
+          onMouseLeave={() => { setMousePos(null); setHoveredNodeId(null); }}
+        >
           {!graphData ? (
             <div className="h-full flex flex-col items-center justify-center text-slate-600 gap-2">
               <span className="text-3xl">⬡</span>
@@ -202,6 +239,70 @@ export default function GraphView({ graphData, selectedNodeId, onSelectNode, hig
             graphData={graphData}
             onClose={() => onSelectNode(null)}
           />
+        )}
+
+        {/* Hover tooltip */}
+        {tooltipContent && mousePos && (
+          <div
+            style={{
+              position: 'absolute',
+              left: mousePos.x + 420 + 16 > graphWidth
+                ? Math.max(0, mousePos.x - 420 - 8)
+                : mousePos.x + 16,
+              top: Math.min(mousePos.y + 16, 560 - 8),
+              width: 400,
+              maxHeight: 320,
+              pointerEvents: 'none',
+              zIndex: 20,
+            }}
+            className="rounded-lg border border-slate-700 bg-slate-900 shadow-xl overflow-hidden"
+          >
+            {tooltipContent.kind === 'codepath' && (
+              <>
+                <div className="px-3 py-2 border-b border-slate-700 bg-slate-800">
+                  <p className="text-xs font-semibold text-emerald-400 font-mono truncate">
+                    {tooltipContent.filePath}
+                  </p>
+                </div>
+                {tooltipContent.snippet ? (
+                  <pre className="px-3 py-2 text-xs font-mono overflow-auto max-h-64 leading-relaxed">
+                    {tooltipContent.snippet.split('\n').map((line, i) => (
+                      <span
+                        key={i}
+                        className={
+                          line.startsWith('+') && !line.startsWith('+++') ? 'text-emerald-400 block' :
+                          line.startsWith('-') && !line.startsWith('---') ? 'text-rose-400 block' :
+                          line.startsWith('@@') ? 'text-blue-400 block' :
+                          'text-slate-300 block'
+                        }
+                      >{line || ' '}</span>
+                    ))}
+                  </pre>
+                ) : (
+                  <p className="px-3 py-2 text-xs text-slate-500">No diff snippet for this file.</p>
+                )}
+              </>
+            )}
+
+            {tooltipContent.kind === 'incident' && (
+              <>
+                <div className="px-3 py-2 border-b border-slate-700 bg-slate-800">
+                  <p className="text-xs font-semibold text-rose-400">Incident</p>
+                  <p className="text-xs text-white mt-0.5 font-mono truncate">{tooltipContent.title}</p>
+                </div>
+                {tooltipContent.summary && (
+                  <p className="px-3 py-2 text-xs text-slate-300 leading-relaxed">{tooltipContent.summary}</p>
+                )}
+              </>
+            )}
+
+            {tooltipContent.kind === 'basic' && (
+              <div className="px-3 py-2">
+                <p className="text-xs font-semibold text-slate-400">{tooltipContent.type}</p>
+                <p className="text-xs text-slate-200 font-mono mt-0.5 break-all">{tooltipContent.name}</p>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
