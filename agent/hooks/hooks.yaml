@@ -1,20 +1,11 @@
-version: "0.1.0"
-description: >
-  Lifecycle hooks for afterburn. Registered here; described in the
-  referenced markdown files. The runtime executes hooks at the declared
-  lifecycle events. If a hook fails, the agent halts and does not proceed.
-
 hooks:
-  - name: bootstrap
-    event: agent.startup
-    description: Verify graph integrity, confirm backend reachability, log run id.
-    script: hooks/bootstrap.md
-    # Failure is fatal — do not start work with a broken graph or backend.
-    on_failure: halt
-
-  - name: teardown
-    event: agent.shutdown
-    description: Flush runtime writes, commit graph state, log run duration.
-    script: hooks/teardown.md
-    # Teardown failure is logged but does not prevent shutdown.
-    on_failure: log_and_continue
+  on_session_start:
+    - script: bootstrap.md
+      description: Verify graph integrity, confirm backend reachability, log run id.
+      timeout: 30
+      fail_open: false
+  on_session_end:
+    - script: teardown.md
+      description: Flush runtime writes, commit graph state, log run duration.
+      timeout: 30
+      fail_open: true

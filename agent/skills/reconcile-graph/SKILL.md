@@ -2,11 +2,7 @@
 name: reconcile-graph
 description: Merge extractor output into the causal graph, enforce deduplication via canonical ids, evaluate pattern promotion rules, and write the updated graph atomically.
 license: MIT
-allowed-tools:
-  - tools/file-read.yaml
-  - tools/file-write.yaml
-  - tools/graph-query.yaml
-invoked-by: agents/cartographer
+allowed-tools: file-read file-write graph-query
 ---
 
 ## Instructions

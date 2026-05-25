@@ -2,10 +2,7 @@
 name: extract-ontology
 description: Run ontology extraction on raw incident text and return typed graph nodes and edges for the cartographer to merge.
 license: MIT
-allowed-tools:
-  - tools/file-read.yaml
-  - tools/ontology-extractor.yaml
-invoked-by: agents/extractor
+allowed-tools: file-read ontology-extractor
 ---
 
 ## Instructions

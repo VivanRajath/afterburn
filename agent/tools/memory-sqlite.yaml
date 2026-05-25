@@ -1,79 +1,59 @@
 name: memory-sqlite
 version: "0.1.0"
 description: >
-  SQLite adapter for the memory backend interface. Self-hosted, single-file
-  database. Full-text search via SQLite FTS5. No external dependencies.
-  Suitable for self-hosted small-to-medium teams who want structured queries
-  without a managed service.
-implements: tools/memory-backend.yaml
-
-config:
-  db_path_env: AFTERBURN_SQLITE_PATH
-  db_path_default: memory/afterburn.db
-  # FTS5 tokenizer used for full-text search
-  fts_tokenizer: unicode61
-
-# Table schema (declared here for reference; migrations run at bootstrap)
-schema:
-  incidents:
-    columns:
-      - id TEXT PRIMARY KEY
-      - raw_text TEXT NOT NULL
-      - source TEXT
-      - ingested_at TEXT           # ISO 8601 UTC
-      - agent TEXT
-      - stored_at TEXT             # ISO 8601 UTC
-    fts5_table: incidents_fts      # mirrors id + raw_text for full-text search
-
-  lessons:
-    columns:
-      - id TEXT PRIMARY KEY
-      - distilled_text TEXT NOT NULL
-      - tags TEXT                  # JSON array stored as TEXT
-      - stored_at TEXT             # ISO 8601 UTC
-    fts5_table: lessons_fts        # mirrors id + distilled_text
-
-method_mapping:
-  save_incident:
-    operation: upsert
-    table: incidents
-    fts_sync: incidents_fts
-
-  save_lesson:
-    operation: upsert
-    table: lessons
-    fts_sync: lessons_fts
-
-  search:
-    operation: fts5_query
-    tables:
-      incidents: incidents_fts
-      lessons: lessons_fts
-      all: [incidents_fts, lessons_fts]
-    # score is BM25 rank normalised to 0.0–1.0
-    score_field: bm25_normalised
-
-  get:
-    operation: select_by_id
-    tables: [incidents, lessons]
-
-  list:
-    operation: select_paginated
-    tables:
-      incidents: incidents
-      lessons: lessons
-    ordering: ascending rowid (insertion order)
-    # cursor encodes the last rowid of the previous batch;
-    # next page is fetched with WHERE rowid > cursor
-    cursor_encoding: last rowid of previous batch
-
-error_handling:
-  db_locked:
-    retry: true
-    max_attempts: 5
-    backoff: linear
-    interval_ms: 200
-  db_not_found: surface_to_operator   # do not auto-create; run bootstrap first
-  fts_index_corrupt:
-    action: rebuild_fts
-    note: Drops and recreates FTS5 tables from base tables
+  SQLite adapter for the memory-backend interface. Self-hosted, single-file
+  database with FTS5 full-text search — no external dependencies. Suitable
+  for self-hosted small-to-medium teams who want structured queries without
+  a managed service. Configure with AFTERBURN_SQLITE_PATH (default:
+  memory/afterburn.db). Skills and sub-agents never reference this adapter
+  directly.
+input_schema:
+  type: object
+  properties:
+    operation:
+      type: string
+      description: "save_incident, save_lesson, search, get, or list — mirrors memory-backend interface"
+    id:
+      type: string
+      description: Record identifier.
+    raw_text:
+      type: string
+      description: Raw incident text for save_incident.
+    distilled_text:
+      type: string
+      description: Distilled lesson text for save_lesson.
+    metadata:
+      type: object
+      description: Metadata object for save operations.
+    tags:
+      type: object
+      description: Tags array for save_lesson.
+    query:
+      type: string
+      description: FTS5 search query.
+    scope:
+      type: string
+      description: "incidents, lessons, or all"
+    limit:
+      type: integer
+      description: Max results.
+    cursor:
+      type: string
+      description: Pagination cursor (last rowid of previous batch).
+  required:
+    - operation
+output_schema:
+  type: object
+  properties:
+    stored_id:
+      type: string
+    backend:
+      type: string
+    results:
+      type: object
+    record:
+      type: object
+    records:
+      type: object
+    next_cursor:
+      type: string

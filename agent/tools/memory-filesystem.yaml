@@ -1,66 +1,58 @@
 name: memory-filesystem
 version: "0.1.0"
 description: >
-  Filesystem adapter for the memory backend interface. Always available,
-  zero config. Stores incidents and lessons as flat JSON files under a
-  configurable root directory. Search is keyword-based (no embeddings).
-  Suitable for local development and small teams.
-implements: tools/memory-backend.yaml
-
-config:
-  # Root directory for all stored records. Defaults to ./memory/store
-  root_dir_env: AFTERBURN_FS_ROOT
-  root_dir_default: memory/store
-  # Directory layout under root:
-  #   incidents/<id>.json
-  #   lessons/<id>.json
-  incidents_dir: incidents
-  lessons_dir: lessons
-  # Index file maintained for search performance
-  index_file: index.json
-
-method_mapping:
-  save_incident:
-    operation: write_json
-    path: "{{ config.root_dir }}/{{ config.incidents_dir }}/{{ id }}.json"
-    # Writes id, raw_text, metadata, stored_at to the JSON file
-    # Updates index.json with id, source, ingested_at, and a 300-char snippet
-
-  save_lesson:
-    operation: write_json
-    path: "{{ config.root_dir }}/{{ config.lessons_dir }}/{{ id }}.json"
-    # Updates index.json with id, tags, and a 300-char snippet
-
-  search:
-    operation: keyword_scan
-    # Scans index.json snippets for query terms; no semantic ranking
-    index: "{{ config.root_dir }}/index.json"
-    # score = matching_query_terms / total_query_terms, normalised to 0.0–1.0
-    score_field: term_frequency_ratio
-    score_range: [0.0, 1.0]
-    note: >
-      Filesystem search is keyword-only. For semantic search, use the
-      cognis or sqlite adapter.
-
-  get:
-    operation: read_json
-    # Checks incidents dir first, then lessons; infers scope from location
-    paths:
-      - "{{ config.root_dir }}/{{ config.incidents_dir }}/{{ id }}.json"
-      - "{{ config.root_dir }}/{{ config.lessons_dir }}/{{ id }}.json"
-
-  list:
-    operation: directory_scan
-    directory: "{{ config.root_dir }}/{{ scope }}"
-    ordering: lexicographic by filename
-    # cursor encodes the last filename seen, enabling deterministic page
-    # advancement by skipping all filenames ≤ cursor value
-    cursor_encoding: last filename seen in lexicographic order
-
-error_handling:
-  file_not_found: return_null_record
-  # On write failure (permissions, disk full), surface error immediately
-  write_failure: surface_to_operator
-  index_corrupt:
-    action: rebuild_index
-    note: Scans incidents/ and lessons/ dirs to regenerate index.json
+  Filesystem adapter for the memory-backend interface. Always available,
+  zero config — stores incidents and lessons as flat JSON files under
+  AFTERBURN_FS_ROOT (default: memory/store). Search is keyword-based with
+  no semantic ranking. Suitable for local development and small teams.
+  Skills and sub-agents never reference this adapter directly.
+input_schema:
+  type: object
+  properties:
+    operation:
+      type: string
+      description: "save_incident, save_lesson, search, get, or list — mirrors memory-backend interface"
+    id:
+      type: string
+      description: Record identifier.
+    raw_text:
+      type: string
+      description: Raw incident text for save_incident.
+    distilled_text:
+      type: string
+      description: Distilled lesson text for save_lesson.
+    metadata:
+      type: object
+      description: Metadata object for save operations.
+    tags:
+      type: object
+      description: Tags array for save_lesson.
+    query:
+      type: string
+      description: Keyword search query.
+    scope:
+      type: string
+      description: "incidents, lessons, or all"
+    limit:
+      type: integer
+      description: Max results.
+    cursor:
+      type: string
+      description: Pagination cursor (last filename seen in lexicographic order).
+  required:
+    - operation
+output_schema:
+  type: object
+  properties:
+    stored_id:
+      type: string
+    backend:
+      type: string
+    results:
+      type: object
+    record:
+      type: object
+    records:
+      type: object
+    next_cursor:
+      type: string

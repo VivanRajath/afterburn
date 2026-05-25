@@ -2,13 +2,7 @@
 name: self-review
 description: Audit past PR warnings against engineer outcomes, update lesson confidence weights, flag blind spots, and optionally replay past checks in sandbox.
 license: MIT
-allowed-tools:
-  - tools/graph-query.yaml
-  - tools/memory-backend.yaml
-  - tools/sandbox-runner.yaml
-  - tools/file-read.yaml
-  - tools/file-write.yaml
-invoked-by: agents/self-reviewer
+allowed-tools: graph-query memory-backend sandbox-runner file-read file-write
 ---
 
 ## Instructions

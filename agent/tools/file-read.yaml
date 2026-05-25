@@ -1,48 +1,33 @@
 name: file-read
 version: "0.1.0"
 description: >
-  Read files from the local filesystem. Used by agents that need to
-  inspect knowledge files, memory runtime files, or staged extraction
-  output. Returns raw content; interpretation is the caller's
-  responsibility.
-
-used_by:
-  - agents/oracle
-  - agents/cartographer
-  - agents/extractor
-  - agents/self-reviewer
-
-operations:
-  - name: read
-    description: Read the full content of a file as a string.
-    inputs:
-      path:
-        type: string
-        required: true
-        description: Absolute or repo-relative file path.
-    outputs:
-      content:
-        type: string
-      size_bytes:
-        type: integer
-      exists:
-        type: boolean
-
-  - name: read_json
-    description: >
-      Read and parse a JSON file. Fails fast on malformed JSON rather
-      than returning partial data — callers must not assume partial
-      results on error.
-    inputs:
-      path:
-        type: string
-        required: true
-    outputs:
-      data:
-        type: object
-      exists:
-        type: boolean
-
+  Read files from the local filesystem. Supports full-content reads
+  (operation: read) and JSON parsing (operation: read_json). Returns raw
+  content or parsed object; interpretation is the caller's responsibility.
+input_schema:
+  type: object
+  properties:
+    operation:
+      type: string
+      description: "read — full content as string; read_json — parse and return JSON object"
+    path:
+      type: string
+      description: Absolute or repo-relative file path.
+  required:
+    - operation
+    - path
+output_schema:
+  type: object
+  properties:
+    content:
+      type: string
+    data:
+      type: object
+    size_bytes:
+      type: integer
+    exists:
+      type: boolean
 implementation:
-  script: scripts/file-read.mjs
+  type: script
+  path: scripts/file-read.mjs
   runtime: node

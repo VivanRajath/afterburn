@@ -2,10 +2,7 @@
 name: distill-lesson
 description: Traverse the causal subgraph for a confirmed incident and write a concise, searchable lesson to the memory backend.
 license: MIT
-allowed-tools:
-  - tools/graph-query.yaml
-  - tools/memory-backend.yaml
-invoked-by: agents/scribe
+allowed-tools: graph-query memory-backend
 ---
 
 ## Instructions

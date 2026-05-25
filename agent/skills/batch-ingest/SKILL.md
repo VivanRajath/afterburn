@@ -6,12 +6,7 @@ description: >
   by bootstrap-from-cognis to seed a fresh graph from an existing
   backend.
 license: MIT
-allowed-tools:
-  - tools/memory-backend.yaml
-  - skills/extract-ontology
-  - skills/reconcile-graph
-  - skills/distill-lesson
-invoked-by: skillflows/bootstrap-from-cognis.yaml
+allowed-tools: memory-backend
 ---
 
 ## Instructions

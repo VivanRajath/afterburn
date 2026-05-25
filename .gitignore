@@ -42,3 +42,4 @@ Thumbs.db
 # Note: knowledge/incident-graph.json is tracked in its empty-seed form
 # per Phase 4. Do NOT add it here — the empty seed is part of the source
 # tree and is the canonical starting state for a fresh deployment.
+.gitagent/

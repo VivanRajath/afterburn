@@ -2,11 +2,7 @@
 name: ingest-incident
 description: Fetch raw post-mortem text from a local file or GitHub source and persist it to the memory backend as a raw incident record.
 license: MIT
-allowed-tools:
-  - tools/file-read.yaml
-  - tools/github-client.yaml
-  - tools/memory-backend.yaml
-invoked-by: agents/ingestor
+allowed-tools: file-read github-client memory-backend
 ---
 
 ## Instructions

@@ -6,9 +6,7 @@ description: >
   adapter-specific code paths. Works identically regardless of which
   two adapters are source and target.
 license: MIT
-allowed-tools:
-  - tools/memory-backend.yaml
-invoked-by: operator (via `afterburn run skill export-memory --from <adapter> --to <adapter>`)
+allowed-tools: memory-backend
 ---
 
 ## Instructions

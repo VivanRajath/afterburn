@@ -55,7 +55,8 @@ Everything below is runnable end-to-end today:
 - Stale-diff auto-fade: if the diff changes after a check, matched nodes drop to 50%
   opacity and a banner prompts a re-run
 - Pluggable memory adapters (Cognis default; filesystem, SQLite, S3 declared)
-- Spec-compliant gitagent v0.1.0 (9 sub-agents, 8 skills, 4 skillflows)
+- Spec-compliant gitagent v0.1.0 (9 sub-agents, 9 skills, 11 tools — validates clean with 0 warnings)
+- `ask` skill: natural-language REPL interface via `gitclaw --dir agent`
 
 ## Demo
 
@@ -101,6 +102,29 @@ On Windows, use the included PowerShell scripts:
 
 See `examples/sample-incident/` for a fictional post-mortem and the graph it
 produces, and `examples/sample-pr/` for what a PR warning looks like in practice.
+
+### CLI via gitclaw
+
+afterburn exposes a natural-language REPL through the `ask` skill:
+
+```powershell
+# Set your API key, then:
+npm run demo:cli
+# — or —
+gitclaw --dir agent
+```
+
+Sample prompts once the REPL starts:
+
+| Intent | Example prompt |
+|---|---|
+| List | `list incidents` |
+| Explain | `tell me about the payment processor incidents` |
+| Check | `what would happen if I changed src/payments/handler.py?` |
+| Meta | `what can you do?` |
+
+Requires `ANTHROPIC_API_KEY` in your environment. The `ask` skill is
+read-only — it queries the graph and surfaces warnings; it never writes.
 
 ## Roadmap
 

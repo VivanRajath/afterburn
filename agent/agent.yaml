@@ -7,60 +7,55 @@ description: >
   pull requests that touch the same failure patterns.
 author: afterburn contributors
 license: MIT
-
-model: claude-sonnet-4-6
-
-# Human entry point for operational guidance
-entrypoint: INSTRUCTIONS.md
-
+model:
+  preferred: claude-sonnet-4-6
+  fallback:
+    - claude-haiku-4-5-20251001
 skills:
-  - skills/ingest-incident
-  - skills/extract-ontology
-  - skills/reconcile-graph
-  - skills/distill-lesson
-  - skills/check-pr
-  - skills/self-review
-  - skills/export-memory
-
+  - ingest-incident
+  - extract-ontology
+  - reconcile-graph
+  - distill-lesson
+  - check-pr
+  - self-review
+  - export-memory
+  - batch-ingest
+  - ask
 tools:
-  # Memory backend interface — all memory ops go through this contract
-  - tools/memory-backend.yaml
-  # Adapters (selected at runtime via AFTERBURN_MEMORY_BACKEND)
-  - tools/memory-cognis.yaml
-  - tools/memory-filesystem.yaml
-  - tools/memory-sqlite.yaml
-  - tools/memory-s3.yaml
-  # Operational primitives
-  - tools/ontology-extractor.yaml
-  - tools/graph-query.yaml
-  - tools/github-client.yaml
-  - tools/sandbox-runner.yaml
-  - tools/file-read.yaml
-  - tools/file-write.yaml
-
-sub_agents:
-  - agents/ingestor
-  - agents/extractor
-  - agents/cartographer
-  - agents/oracle
-  - agents/jnr-oracle
-  - agents/snr-oracle
-  - agents/architect-oracle
-  - agents/scribe
-  - agents/self-reviewer
-
-skillflows:
-  - skillflows/ingest-incident.yaml
-  - skillflows/pr-check.yaml
-  - skillflows/self-review.yaml
-  - skillflows/bootstrap-from-cognis.yaml
-
+  - memory-backend
+  - memory-cognis
+  - memory-filesystem
+  - memory-sqlite
+  - memory-s3
+  - ontology-extractor
+  - graph-query
+  - github-client
+  - sandbox-runner
+  - file-read
+  - file-write
+agents:
+  ingestor:
+    description: Fetches raw post-mortem text from local files or GitHub sources and persists it to the memory backend.
+  extractor:
+    description: Runs ontology extraction on raw incident text and returns typed graph nodes and edges.
+  cartographer:
+    description: Merges extractor output into the causal graph, enforces deduplication, and evaluates pattern promotion rules.
+  oracle:
+    description: Inspects PR diffs, queries the causal graph, and routes to the appropriate tier sub-agent.
+  jnr-oracle:
+    description: Handles zero-incident PRs with a silent pass.
+  snr-oracle:
+    description: Handles PRs with 1-2 past incidents or hot-zone hits, posting a single-lesson warning.
+  architect-oracle:
+    description: Handles PRs with recurring or band-aid patterns, posting a full multi-hop causal chain analysis.
+  scribe:
+    description: Distills causal subgraph traversals into concise, searchable lessons for the memory backend.
+  self-reviewer:
+    description: Audits past PR warnings against engineer outcomes and updates lesson confidence weights.
 runtime:
-  # Override default backend with env var AFTERBURN_MEMORY_BACKEND
-  memory_backend: memory-cognis
-  # HITL is non-negotiable: warnings only, no auto-blocking
-  hitl: true
-  hooks: hooks/hooks.yaml
-  scheduler: scheduler.yml
-  knowledge_root: knowledge/
-  log_level: info
+  max_turns: 30
+  timeout: 300
+tags:
+  - incident-management
+  - code-review
+  - developer-tools

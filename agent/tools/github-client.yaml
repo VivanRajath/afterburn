@@ -2,86 +2,48 @@ name: github-client
 version: "0.1.0"
 description: >
   Read PR diffs and post review comments on GitHub. afterburn is
-  comment-only: this tool deliberately omits approve, request-changes,
-  merge, and close operations. Do not add them.
-
-used_by: [agents/oracle, agents/snr-oracle, agents/architect-oracle]
-
-config:
-  token_env: GITHUB_TOKEN
-  # Minimum required scopes — read diff, write comments, nothing else
-  required_scopes: [pull_requests:write, contents:read]
-
-operations:
-  - name: get_pr_diff
-    description: >
-      Fetch the unified diff for a pull request. Returns changed files
-      and per-file patch content. Used by oracle to identify which files
-      are touched and query the causal graph.
-    inputs:
-      repo:
-        type: string
-        required: true
-        description: "Owner/repo format (e.g. acme/api-server)."
-      pr_number:
-        type: integer
-        required: true
-    outputs:
-      changed_files:
-        type: array
-        description: List of changed file paths.
-      patches:
-        type: array
-        description: >
-          Per-file patch objects: filename, status (added|modified|removed),
-          additions (int), deletions (int), patch (unified diff string).
-
-  - name: post_comment
-    description: >
-      Post a review comment on a pull request. The only write operation
-      this tool supports. The comment body must cite a specific incident
-      or lesson ID — bare warnings without citation are not permitted.
-    inputs:
-      repo:
-        type: string
-        required: true
-      pr_number:
-        type: integer
-        required: true
-      body:
-        type: string
-        required: true
-        description: >
-          Markdown comment body. Must contain a citation in the form
-          [INC-XXXX] or [LES-XXXX]. The caller is responsible for
-          including the citation before invoking this operation.
-    outputs:
-      comment_url:
-        type: string
-      comment_id:
-        type: integer
-
-  - name: get_file_history
-    description: >
-      Fetch the recent commit history for a specific file. Used by
-      architect-oracle to assess commit frequency as a signal for
-      instability before posting a band-aid warning.
-    inputs:
-      repo:
-        type: string
-        required: true
-      file_path:
-        type: string
-        required: true
-      limit:
-        type: integer
-        required: false
-        default: 20
-    outputs:
-      commits:
-        type: array
-        description: "Commits touching this file: sha, message, date, author."
-
+  comment-only — this tool deliberately omits approve, request-changes,
+  merge, and close operations. Requires GITHUB_TOKEN with
+  pull_requests:write and contents:read scopes. Operations: get_pr_diff,
+  post_comment (body must cite [INC-XXXX] or [LES-XXXX]), get_file_history.
+input_schema:
+  type: object
+  properties:
+    operation:
+      type: string
+      description: "get_pr_diff, post_comment, or get_file_history"
+    repo:
+      type: string
+      description: "Owner/repo format (e.g. acme/api-server)."
+    pr_number:
+      type: integer
+      description: Pull request number.
+    body:
+      type: string
+      description: Markdown comment body for post_comment. Must cite an incident or lesson ID.
+    file_path:
+      type: string
+      description: File path to fetch history for (get_file_history).
+    limit:
+      type: integer
+      description: Maximum commits to return for get_file_history. Default 20.
+  required:
+    - operation
+    - repo
+output_schema:
+  type: object
+  properties:
+    changed_files:
+      type: object
+    patches:
+      type: object
+    comment_url:
+      type: string
+    comment_id:
+      type: integer
+    commits:
+      type: object
 implementation:
-  script: scripts/github-client.mjs
+  type: script
+  path: scripts/github-client.mjs
   runtime: node
