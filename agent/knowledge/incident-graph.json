@@ -1,6 +1,6 @@
 {
   "version": "0.1.0",
-  "updated_at": "2026-05-25T05:14:42.493Z",
+  "updated_at": "2026-05-25T05:31:02.266Z",
   "nodes": [
     {
       "id": "incident:7efe43803f3e",
@@ -92,7 +92,9 @@
       "type": "Error",
       "properties": {
         "id": "error:redis-overload",
-        "description": "Redis Overload"
+        "description": "Redis Overload",
+        "name": "Redis Overload",
+        "band_aid_candidate": true
       }
     },
     {
@@ -112,7 +114,8 @@
       "type": "Symptom",
       "properties": {
         "id": "symptom:excessive-parallelism",
-        "description": "Excessive parallelism causing connection pool exhaustion"
+        "description": "Excessive parallelism causing connection pool exhaustion",
+        "name": "Excessive Parallelism"
       }
     },
     {
@@ -120,7 +123,8 @@
       "type": "Symptom",
       "properties": {
         "id": "symptom:connection-pool-exhaustion",
-        "description": "Connection pool exhaustion due to excessive parallelism"
+        "description": "Connection pool exhaustion due to excessive parallelism",
+        "name": "Connection Pool Exhaustion"
       }
     },
     {
@@ -142,7 +146,7 @@
       "id": "incident:3310de46aa7d",
       "type": "Incident",
       "properties": {
-        "id": "incident:3310de46aa7d",
+        "id": "3310de46aa7d",
         "date": "October 2025",
         "start_date": "2025-10-21 22:30",
         "end_date": "2025-10-30 05:39",
@@ -150,7 +154,8 @@
         "impact": "Over 14 hours across four incidents (errors or severe latency)",
         "services": "PostHog Feature Flags Service",
         "incident_id": "3310de46aa7d",
-        "description": "PostHog Feature Flags Service experienced multiple outages in October 2025"
+        "description": "PostHog Feature Flags Service experienced multiple outages in October 2025",
+        "summary": "PostHog Feature Flags Service - Multiple Outages (October 2025)"
       }
     },
     {
@@ -258,7 +263,8 @@
       "type": "RootCause",
       "properties": {
         "id": "root-cause:cpu-resource-undersizing",
-        "description": "CPU resource undersizing causing excessive parallelism and connection pool exhaustion"
+        "description": "CPU resource undersizing causing excessive parallelism and connection pool exhaustion",
+        "name": "CPU Resource Undersizing"
       }
     },
     {
@@ -382,6 +388,110 @@
       "type": "Trigger",
       "properties": {
         "description": "Unrelated deployment triggered feature flags pod rollout"
+      }
+    },
+    {
+      "id": "error:readonly-request-stream-byte-mismatch-typeerror",
+      "type": "Error"
+    },
+    {
+      "id": "symptom:unusable-production-site",
+      "type": "Symptom"
+    },
+    {
+      "id": "mitigation:fallback-to-simple-fetch-implementation",
+      "type": "Mitigation",
+      "properties": {
+        "band_aid_candidate": true
+      }
+    },
+    {
+      "id": "code-path:src-posthog-js-fetch-ts",
+      "type": "CodePath",
+      "properties": {
+        "original_path": "src/posthog-js/fetch.ts"
+      }
+    },
+    {
+      "id": "mitigation:1-327-0",
+      "type": "Mitigation"
+    },
+    {
+      "id": "mitigation:1-328-0",
+      "type": "Mitigation"
+    },
+    {
+      "id": "error:request-mismatched-formdata-boundaries-typeerror",
+      "type": "Error"
+    },
+    {
+      "id": "service:postgres",
+      "type": "Service",
+      "properties": {
+        "name": "Postgres Service"
+      }
+    },
+    {
+      "id": "mitigation:timeout-adjustments",
+      "type": "Mitigation",
+      "properties": {
+        "name": "Timeout Adjustments"
+      }
+    },
+    {
+      "id": "mitigation:retry-limits",
+      "type": "Mitigation",
+      "properties": {
+        "name": "Retry Limits"
+      }
+    },
+    {
+      "id": "code-path:src-service-flags-py",
+      "type": "CodePath",
+      "properties": {
+        "path": "src/service/flags.py",
+        "original_path": "src/service/flags.py"
+      }
+    },
+    {
+      "id": "code-path:src-infrastructure-connections-py",
+      "type": "CodePath",
+      "properties": {
+        "path": "src/infrastructure/connections.py",
+        "original_path": "src/infrastructure/connections.py"
+      }
+    },
+    {
+      "id": "incident:3310de46aa7d-incident-21-2025",
+      "type": "Incident",
+      "properties": {
+        "id": "3310de46aa7d-incident-21-2025",
+        "summary": "October 21 Incident - Redis Overload"
+      }
+    },
+    {
+      "id": "incident:3310de46aa7d-incident-24-2025",
+      "type": "Incident",
+      "properties": {
+        "id": "3310de46aa7d-incident-24-2025",
+        "summary": "October 24 Incident - Rate Limiting Misconfiguration",
+        "band_aid_candidate": true
+      }
+    },
+    {
+      "id": "incident:3310de46aa7d-incident-28-2025",
+      "type": "Incident",
+      "properties": {
+        "id": "3310de46aa7d-incident-28-2025",
+        "summary": "October 28 Incident - Connection Pool Exhaustion and Excessive Parallelism"
+      }
+    },
+    {
+      "id": "incident:3310de46aa7d-incident-29-30-2025",
+      "type": "Incident",
+      "properties": {
+        "id": "3310de46aa7d-incident-29-30-2025",
+        "summary": "October 29-30 Incident - CPU-Bound Latency"
       }
     }
   ],
@@ -684,6 +794,121 @@
     {
       "source": "trigger:unrelated-deployment",
       "target": "incident:3310de46aa7d",
+      "type": "caused"
+    },
+    {
+      "source": "incident:7efe43803f3e",
+      "target": "root-cause:simplistic-fetch-wrapper",
+      "type": "rootCause"
+    },
+    {
+      "source": "incident:7efe43803f3e",
+      "target": "symptom:unusable-production-site",
+      "type": "manifested_as"
+    },
+    {
+      "source": "service:posthog-sdk",
+      "target": "code-path:src-posthog-js-fetch-ts",
+      "type": "depends_on"
+    },
+    {
+      "source": "incident:7efe43803f3e",
+      "target": "mitigation:1-328-0",
+      "type": "resolved"
+    },
+    {
+      "source": "incident:7efe43803f3e",
+      "target": "error:request-mismatched-formdata-boundaries-typeerror",
+      "type": "manifested_as"
+    },
+    {
+      "source": "code-path:src-posthog-js-fetch-ts",
+      "target": "error:readonly-request-stream-byte-mismatch-typeerror",
+      "type": "caused"
+    },
+    {
+      "source": "root-cause:simplistic-fetch-wrapper",
+      "target": "error:request-mismatched-formdata-boundaries-typeerror",
+      "type": "satisfies"
+    },
+    {
+      "source": "service:posthog-sdk",
+      "target": "incident:7efe43803f3e",
+      "type": "caused"
+    },
+    {
+      "source": "incident:7efe43803f3e",
+      "target": "mitigation:fallback-to-simple-fetch-implementation",
+      "type": "satisfies"
+    },
+    {
+      "source": "service:posthog-sdk",
+      "target": "mitigation:fallback-to-simple-fetch-implementation",
+      "type": "depends_on"
+    },
+    {
+      "source": "code-path:src-posthog-js-fetch-ts",
+      "target": "mitigation:fallback-to-simple-fetch-implementation",
+      "type": "resolved"
+    },
+    {
+      "source": "incident:3310de46aa7d",
+      "target": "service:postgres",
+      "type": "caused"
+    },
+    {
+      "source": "root-cause:cpu-resource-undersizing",
+      "target": "incident:3310de46aa7d-incident-21-2025",
+      "type": "resolved"
+    },
+    {
+      "source": "root-cause:cpu-resource-undersizing",
+      "target": "incident:3310de46aa7d-incident-28-2025",
+      "type": "resolved"
+    },
+    {
+      "source": "root-cause:cpu-resource-undersizing",
+      "target": "incident:3310de46aa7d-incident-29-30-2025",
+      "type": "resolved"
+    },
+    {
+      "source": "error:redis-overload",
+      "target": "incident:3310de46aa7d-incident-21-2025",
+      "type": "manifested_as"
+    },
+    {
+      "source": "symptom:excessive-parallelism",
+      "target": "incident:3310de46aa7d-incident-21-2025",
+      "type": "manifested_as"
+    },
+    {
+      "source": "symptom:connection-pool-exhaustion",
+      "target": "incident:3310de46aa7d-incident-21-2025",
+      "type": "manifested_as"
+    },
+    {
+      "source": "symptom:excessive-parallelism",
+      "target": "incident:3310de46aa7d-incident-28-2025",
+      "type": "manifested_as"
+    },
+    {
+      "source": "symptom:connection-pool-exhaustion",
+      "target": "incident:3310de46aa7d-incident-28-2025",
+      "type": "manifested_as"
+    },
+    {
+      "source": "mitigation:timeout-adjustments",
+      "target": "service:postgres",
+      "type": "affected"
+    },
+    {
+      "source": "mitigation:retry-limits",
+      "target": "error:redis-overload",
+      "type": "resolved"
+    },
+    {
+      "source": "incident:3310de46aa7d-incident-24-2025",
+      "target": "service:posthog-feature-flags",
       "type": "caused"
     }
   ]
