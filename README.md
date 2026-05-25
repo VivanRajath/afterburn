@@ -94,10 +94,10 @@ On Windows, use the included PowerShell scripts:
 
 ```powershell
 # Verify environment and seed graph
-.\scripts\bootstrap.ps1
+.\agent\scripts\bootstrap.ps1
 
 # Run the full demo with sample data
-.\scripts\run-demo.ps1
+.\agent\scripts\run-demo.ps1
 ```
 
 See `examples/sample-incident/` for a fictional post-mortem and the graph it
@@ -143,11 +143,9 @@ it never writes.
 - GitHub App mode: afterburn posts PR comments directly instead of surfacing warnings
   only in the web UI
 
-See [FUTURE.md](FUTURE.md) for post-v0.2 directions.
-
 ## Architecture
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for the full system walkthrough — agent
+See [agent/ARCHITECTURE.md](agent/ARCHITECTURE.md) for the full system walkthrough — agent
 identities and tool budgets, the causal graph schema, tier routing logic, and the
 band-aid pattern as a worked example.
 

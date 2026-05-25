@@ -3,7 +3,7 @@
 ## System Overview
 
 afterburn is a [gitagent v0.1.0](https://www.gitagent.sh/) native agent with nine
-sub-agents, eight skills, four skillflows, and a flat JSON causal knowledge graph.
+sub-agents, nine skills, four skillflows, and a flat JSON causal knowledge graph.
 It ingests post-mortems, extracts a structured graph, detects failure patterns, and
 surfaces warnings at PR time.
 

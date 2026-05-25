@@ -88,9 +88,9 @@ afterburn/
 ├── .gitignore                    # Git ignore rules
 ├── LICENSE                       # MIT license
 ├── README.md                     # Project overview
-├── SOUL.md                       # AI agent identity prompt
-├── FUTURE.md                     # Post-v0.2 roadmap directions
-├── agent.yaml                    # Root-level gitagent config (auto-generated)
+├── SOUL.md                       # Root-level gitagent identity prompt
+├── agent.yaml                    # Root-level gitagent config
+├── rundown.md                    # This guide — full project walkthrough
 ├── next.config.mjs               # Next.js configuration
 ├── package.json                  # Node.js dependencies & scripts
 ├── postcss.config.mjs            # PostCSS → Tailwind pipeline
@@ -215,19 +215,13 @@ afterburn/
 │   └── workspace/                #   Agent workspace directory
 │
 ├── scripts/                      # ─── Utility Scripts ──────────────────
-│   ├── cli-demo.ps1              #   PowerShell CLI demo launcher
-│   ├── smoke-test-api.mjs        #   API endpoint smoke tests
-│   ├── take-screenshots.mjs      #   UI screenshot automation
-│   └── screenshot-with-panel.mjs #   Screenshot with panel open
+│   ├── cli-demo.ps1              #   PowerShell CLI demo launcher (Groq)
+│   └── smoke-test-api.mjs        #   API endpoint smoke tests
 │
 ├── memory/                       # ─── Top-level Memory ─────────────────
-│   └── MEMORY.md                 #   Memory placeholder
+│   └── MEMORY.md                 #   Gitagent memory store
 │
-├── public/                       # ─── Static Assets ────────────────────
-│   ├── screenshot-graph.png      #   Graph visualization screenshot
-│   └── screenshot-warning.png    #   Warning UI screenshot
-│
-└── workspace/                    # ─── Workspace (empty) ────────────────
+└── public/                       # ─── Static Assets (gitignored images) ─
 ```
 
 ---
@@ -752,13 +746,13 @@ Launches the gitclaw REPL for natural-language queries against the graph.
 npm run demo:cli
 ```
 
-**Prerequisites**: `ANTHROPIC_API_KEY` set, `gitclaw` installed globally.
+**Prerequisites**: `GROQ_API_KEY` set, `gitclaw` installed globally.
 
-**Sample prompts**:
-- `list incidents` — summarize what's in the graph
-- `tell me about the payment processor incidents`
-- `what would happen if I changed src/payments/handler.py?`
-- `what can you do?`
+**Sample prompts (four intents)**:
+- `what can you do?` — META: list capabilities
+- `what incidents are there?` — LIST: summarize the graph
+- `tell me about the band-aid pattern` — EXPLAIN: trace a pattern
+- `what would happen if I changed src/payments/handler.py?` — CHECK: diff-aware warning
 
 ### `scripts/smoke-test-api.mjs`
 
@@ -773,10 +767,6 @@ Tests:
 1. `POST /api/add-repo` → expects `status: "ready"`
 2. `GET /api/graph?repo_id=demo` → expects `nodes.length > 0`
 3. `POST /api/check` with sample diff → expects `tier: "architect"`
-
-### `scripts/take-screenshots.mjs` & `scripts/screenshot-with-panel.mjs`
-
-Playwright-based screenshot automation for documentation. Captures the graph view and warning panels.
 
 ---
 
@@ -880,8 +870,8 @@ npm run dev
 ### Workflow 2: CLI Demo (gitclaw REPL)
 
 ```powershell
-# 1. Set ANTHROPIC_API_KEY in your environment
-$env:ANTHROPIC_API_KEY = "sk-ant-..."
+# 1. Set GROQ_API_KEY in your environment (free tier at console.groq.com)
+$env:GROQ_API_KEY = "gsk_..."
 
 # 2. Install gitclaw
 npm install -g gitclaw
@@ -889,7 +879,11 @@ npm install -g gitclaw
 # 3. Run the demo
 npm run demo:cli
 
-# 4. Try: "list incidents", "what can you do?"
+# 4. Try the four intents:
+#    "what can you do?"
+#    "what incidents are there?"
+#    "tell me about the band-aid pattern"
+#    "what would happen if I changed src/payments/handler.py?"
 ```
 
 ### Workflow 3: Full Agent Pipeline (gitagent)
