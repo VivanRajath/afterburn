@@ -38,6 +38,29 @@ not a search. The warning writes itself.
 afterburn **never** auto-blocks, auto-approves, or auto-rejects a pull request.
 It posts comments. Engineers decide.
 
+## Status
+
+Everything below is runnable end-to-end today:
+
+- Live GitHub repo ingestion via system `git` + ontology extraction (Groq-primary,
+  Anthropic / OpenAI fallback)
+- Causal graph stored in `agent/knowledge/incident-graph.json` — 63 nodes, 83 edges
+  seeded from PostHog post-mortems
+- Tier-routed PR check (`jnr` / `snr` / `architect`) based on graph query results
+- Band-aid pattern detection (mitigation resolved an incident but has no `satisfies`
+  edge back to the root cause)
+- Hot zone detection (code path touched in 3+ distinct incidents)
+- Diff-aware graph highlighting: matched nodes glow at full opacity, unmatched dim to
+  25%; hovering a highlighted node shows the relevant diff hunk in a tooltip
+- Stale-diff auto-fade: if the diff changes after a check, matched nodes drop to 50%
+  opacity and a banner prompts a re-run
+- Pluggable memory adapters (Cognis default; filesystem, SQLite, S3 declared)
+- Spec-compliant gitagent v0.1.0 (9 sub-agents, 8 skills, 4 skillflows)
+
+## Demo
+
+See demo video: [link to be added after recording]
+
 ## How it fits the gitagent ecosystem
 
 afterburn is a native [gitagent v0.1.0](https://www.gitagent.sh/) agent. Its
@@ -79,14 +102,17 @@ On Windows, use the included PowerShell scripts:
 See `examples/sample-incident/` for a fictional post-mortem and the graph it
 produces, and `examples/sample-pr/` for what a PR warning looks like in practice.
 
-## Repo cloning (v0.1 vs v0.2)
+## Roadmap
 
-The web platform's "Connect a repo" flow currently clones using the system `git`
-binary via `child_process.spawn` — zero new npm dependencies, works out of the box.
+**v0.2**
 
-v0.2 will route clones through
-[Jr Architect](https://github.com/VivanRajath/Jr-Architect), a Docker-isolated
-sandbox runtime, so untrusted repos never touch the host filesystem.
+- Route repo clones through [Jr Architect](https://github.com/VivanRajath/Jr-Architect),
+  a Docker-isolated sandbox runtime, so untrusted repos never touch the host filesystem
+- Incremental graph updates (re-ingest only changed post-mortem files, not the full repo)
+- GitHub App mode: afterburn posts PR comments directly instead of surfacing warnings
+  only in the web UI
+
+See [FUTURE.md](FUTURE.md) for post-v0.2 directions.
 
 ## Architecture
 
