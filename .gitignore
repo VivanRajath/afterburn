@@ -38,6 +38,11 @@ Thumbs.db
 *.swo
 .idea/
 .vscode/
+.claude/
+
+# Screenshots (use scripts/take-screenshots.mjs to regenerate)
+public/*.png
+public/*.jpg
 
 # Note: knowledge/incident-graph.json is tracked in its empty-seed form
 # per Phase 4. Do NOT add it here — the empty seed is part of the source
