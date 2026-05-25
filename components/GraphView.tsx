@@ -4,6 +4,7 @@ import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import NodePanel from '@/components/NodePanel';
 import type { GraphData, GraphNode } from '@/lib/types';
+import { linkEndId } from '@/lib/types';
 import { extractSnippetForFile, findFileForCodePath } from '@/lib/diff-snippet';
 
 const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), {
@@ -154,7 +155,22 @@ export default function GraphView({ graphData, selectedNodeId, onSelectNode, hig
         ?? (node.properties?.summary as string | undefined)?.split(' ').slice(0, 8).join(' ')
         ?? node.id;
       const summary = (node.properties?.summary as string | undefined)?.slice(0, 160);
-      return { kind: 'incident' as const, title, summary };
+
+      // Collect diff snippets for this incident's touched code paths
+      const touchedSnippets: Array<{ filePath: string; snippet: string }> = [];
+      if (graphData) {
+        for (const link of graphData.links) {
+          if (link.type !== 'touched' || linkEndId(link.source) !== hoveredNodeId) continue;
+          const codePathId = linkEndId(link.target);
+          const filePath = findFileForCodePath(diff, codePathId);
+          if (filePath) {
+            const snippet = extractSnippetForFile(diff, filePath);
+            if (snippet) touchedSnippets.push({ filePath, snippet });
+          }
+        }
+      }
+
+      return { kind: 'incident' as const, title, summary, touchedSnippets };
     }
 
     // Dimmed or other node types — show basic info
@@ -288,11 +304,31 @@ export default function GraphView({ graphData, selectedNodeId, onSelectNode, hig
               <>
                 <div className="px-3 py-2 border-b border-slate-700 bg-slate-800">
                   <p className="text-xs font-semibold text-rose-400">Incident</p>
-                  <p className="text-xs text-white mt-0.5 font-mono truncate">{tooltipContent.title}</p>
+                  <p className="text-xs text-white mt-0.5 font-semibold leading-snug">{tooltipContent.title}</p>
                 </div>
                 {tooltipContent.summary && (
-                  <p className="px-3 py-2 text-xs text-slate-300 leading-relaxed">{tooltipContent.summary}</p>
+                  <p className="px-3 py-2 text-xs text-slate-300 leading-relaxed border-b border-slate-800">
+                    {tooltipContent.summary}
+                  </p>
                 )}
+                {tooltipContent.touchedSnippets.map((ts) => (
+                  <div key={ts.filePath}>
+                    <p className="px-3 pt-2 text-xs font-mono text-emerald-400 truncate">{ts.filePath}</p>
+                    <pre className="px-3 pb-2 text-xs font-mono overflow-auto max-h-32 leading-relaxed">
+                      {ts.snippet.split('\n').map((line, i) => (
+                        <span
+                          key={i}
+                          className={
+                            line.startsWith('+') && !line.startsWith('+++') ? 'text-emerald-400 block' :
+                            line.startsWith('-') && !line.startsWith('---') ? 'text-rose-400 block' :
+                            line.startsWith('@@') ? 'text-blue-400 block' :
+                            'text-slate-300 block'
+                          }
+                        >{line || ' '}</span>
+                      ))}
+                    </pre>
+                  </div>
+                ))}
               </>
             )}
 

@@ -1,84 +1,690 @@
 {
   "version": "0.1.0",
-  "updated_at": "2026-05-24T11:00:00Z",
+  "updated_at": "2026-05-25T05:14:42.493Z",
   "nodes": [
     {
-      "id": "incident:PAY-2024-031501",
+      "id": "incident:7efe43803f3e",
       "type": "Incident",
       "properties": {
-        "title": "Connection Pool Exhaustion in Payments Service",
-        "occurred_at": "2024-03-15T14:23:00Z",
-        "severity": "SEV-2",
-        "duration_minutes": 47,
+        "id": "incident:7efe43803f3e",
+        "summary": "A customer reported a critical issue in the PostHog SDK's Fetch API wrapper that rendered their site unusable.",
+        "status": "resolved",
+        "severity": "critical",
+        "band_aid_candidate": true,
+        "title": "Changes to SDK fetch() wrapper breaking client sites",
+        "description": "A customer reported a critical issue in the PostHog SDK’s Fetch API wrapper that rendered their site unusable.",
+        "start_date": "2026-01-10T00:00:00",
+        "end_date": "2026-01-19T00:00:00",
+        "started_at": "2026-01-14T10:18:00Z",
+        "resolved_at": "2026-01-19T16:04:00Z"
+      }
+    },
+    {
+      "id": "service:posthog-js",
+      "type": "Service",
+      "properties": {
+        "name": "PostHog SDK"
+      }
+    },
+    {
+      "id": "error:unreadablestream",
+      "type": "Error",
+      "properties": {
+        "code": "TypeError",
+        "description": "TypeError for requests with a ReadableStream body"
+      }
+    },
+    {
+      "id": "root-cause:simplistic-fetch-wrapper",
+      "type": "RootCause",
+      "properties": {
+        "description": "The SDK fetch wrapper was too simplistic and did not pass on request options that are sometimes required"
+      }
+    },
+    {
+      "id": "symptom:fetch-request-failure",
+      "type": "Symptom",
+      "properties": {
+        "description": "Fetch requests failed with a TypeError"
+      }
+    },
+    {
+      "id": "mitigation:fix-1-327-0",
+      "type": "Mitigation",
+      "properties": {
+        "date": "2026-01-17",
+        "description": "A fix was released for mismatched FormData boundaries (1.327.0)"
+      }
+    },
+    {
+      "id": "mitigation:roll-back-1-328-0",
+      "type": "Mitigation",
+      "properties": {
+        "date": "2026-01-17",
+        "description": "All recent changes were rolled back to the last known working version (1.328.0)"
+      }
+    },
+    {
+      "id": "code-path:src-replay-fetch-wrapper-ts",
+      "type": "CodePath",
+      "properties": {
+        "path": "src/replay/fetch_wrapper.ts",
+        "original_path": "src/replay/fetch_wrapper.ts"
+      }
+    },
+    {
+      "id": "service:cdn",
+      "type": "Service",
+      "properties": {
+        "name": "PostHog CDN"
+      }
+    },
+    {
+      "id": "service:posthog-feature-flags",
+      "type": "Service",
+      "properties": {
+        "id": "service:posthog-feature-flags",
+        "name": "PostHog Feature Flags Service"
+      }
+    },
+    {
+      "id": "error:redis-overload",
+      "type": "Error",
+      "properties": {
+        "id": "error:redis-overload",
+        "description": "Redis Overload"
+      }
+    },
+    {
+      "id": "error:rate-limiting-misconfigured",
+      "type": "Error",
+      "properties": {}
+    },
+    {
+      "id": "root-cause:cpu-undersizing",
+      "type": "RootCause",
+      "properties": {
         "band_aid_candidate": true
       }
     },
     {
-      "id": "service:payments-service",
-      "type": "Service",
-      "properties": { "name": "payments-service", "version": "v2.4.1" }
-    },
-    {
-      "id": "service:orders-service",
-      "type": "Service",
-      "properties": { "name": "orders-service" }
-    },
-    {
-      "id": "root-cause:missing-db-index-webhook-events",
-      "type": "RootCause",
-      "properties": {
-        "description": "Missing index on webhook_events.stripe_event_id causes O(n) table scans under high write volume",
-        "category": "database"
-      }
-    },
-    {
-      "id": "error:connection-pool-exhaustion-payments",
-      "type": "Error",
-      "properties": {
-        "message": "payments-service connection pool exhausted",
-        "code": "ECONNRESET"
-      }
-    },
-    {
-      "id": "symptom:order-payment-status-timeout",
+      "id": "symptom:excessive-parallelism",
       "type": "Symptom",
       "properties": {
-        "observable": "orders-service payment status calls timeout at 10s during checkout",
-        "severity": "high"
+        "id": "symptom:excessive-parallelism",
+        "description": "Excessive parallelism causing connection pool exhaustion"
       }
     },
     {
-      "id": "mitigation:add-webhook-events-index-2024-03-15",
+      "id": "symptom:connection-pool-exhaustion",
+      "type": "Symptom",
+      "properties": {
+        "id": "symptom:connection-pool-exhaustion",
+        "description": "Connection pool exhaustion due to excessive parallelism"
+      }
+    },
+    {
+      "id": "mitigation:cpu-right-sizing",
       "type": "Mitigation",
       "properties": {
-        "action": "CREATE INDEX CONCURRENTLY idx_stripe_event_id ON webhook_events(stripe_event_id)",
-        "permanent": false,
-        "applied_at": "2024-03-15T14:44:00Z"
+        "date": "October 2025",
+        "band_aid_candidate": true,
+        "id": "mitigation:cpu-right-sizing",
+        "description": "CPU right sizing resolved underlying issues"
       }
     },
     {
-      "id": "code-path:src/payments/webhook_handler.py",
+      "id": "code-path:src-posthog-service-feature-flags-py",
       "type": "CodePath",
-      "properties": { "language": "python", "last_incident": "incident:PAY-2024-031501" }
+      "properties": {}
     },
     {
-      "id": "code-path:src/payments/db/migrations/0042_webhook_events.py",
-      "type": "CodePath",
-      "properties": { "language": "python", "last_incident": "incident:PAY-2024-031501" }
+      "id": "incident:3310de46aa7d",
+      "type": "Incident",
+      "properties": {
+        "id": "incident:3310de46aa7d",
+        "date": "October 2025",
+        "start_date": "2025-10-21 22:30",
+        "end_date": "2025-10-30 05:39",
+        "duration": 7.15,
+        "impact": "Over 14 hours across four incidents (errors or severe latency)",
+        "services": "PostHog Feature Flags Service",
+        "incident_id": "3310de46aa7d",
+        "description": "PostHog Feature Flags Service experienced multiple outages in October 2025"
+      }
     },
     {
-      "id": "code-path:src/orders/payment_status.py",
+      "id": "service:posthog-sdk",
+      "type": "Service",
+      "properties": {
+        "title": "PostHog SDK",
+        "name": "PostHog SDK",
+        "band_aid_candidate": true
+      }
+    },
+    {
+      "id": "error:typeerror",
+      "type": "Error",
+      "properties": {
+        "title": "TypeError"
+      }
+    },
+    {
+      "id": "root-cause:lazy-loaded-fetch-wraper",
+      "type": "RootCause",
+      "properties": {
+        "title": "Lazy-loaded fetch wrapper issue"
+      }
+    },
+    {
+      "id": "trigger:customer-report",
+      "type": "Trigger",
+      "properties": {
+        "title": "Customer reported issue"
+      }
+    },
+    {
+      "id": "symptom:mismatched-form-data",
+      "type": "Symptom",
+      "properties": {
+        "title": "Mismatched FormData boundaries"
+      }
+    },
+    {
+      "id": "mitigation:rollback-fetch-wrapper",
+      "type": "Mitigation",
+      "properties": {
+        "title": "Roll back all recent changes to fetch wrapper",
+        "date": "2026-01-17T20:00:00"
+      }
+    },
+    {
+      "id": "code-path:src-posthog-js-fetch-wrapper-ts",
       "type": "CodePath",
-      "properties": { "language": "python", "last_incident": "incident:PAY-2024-031501" }
+      "properties": {
+        "path": "src/posthog-js/fetch_wrapper.ts",
+        "original_path": "src/posthog-js/fetch_wrapper.ts"
+      }
+    },
+    {
+      "id": "service:jupyter-notebook",
+      "type": "Service",
+      "properties": {
+        "title": "Notebook Service"
+      }
+    },
+    {
+      "id": "error:rate-limiting-misconfiguration",
+      "type": "Error",
+      "properties": {
+        "id": "error:rate-limiting-misconfiguration",
+        "description": "Rate limiting misconfiguration causing 429 errors"
+      }
+    },
+    {
+      "id": "error:connection-pool-exhaustion",
+      "type": "Error",
+      "properties": {
+        "id": "error:connection-pool-exhaustion",
+        "description": "Connection Pool Exhaustion"
+      }
+    },
+    {
+      "id": "triggerring-event:october-21-incident",
+      "type": "Trigger",
+      "properties": {
+        "id": "triggerring-event:october-21-incident",
+        "date": "October 21, 2025"
+      }
+    },
+    {
+      "id": "triggerring-event:october-24-incident",
+      "type": "Trigger",
+      "properties": {
+        "id": "triggerring-event:october-24-incident",
+        "date": "October 24, 2025"
+      }
+    },
+    {
+      "id": "triggerring-event:october-28-incident",
+      "type": "Trigger",
+      "properties": {
+        "id": "triggerring-event:october-28-incident",
+        "date": "October 28, 2025"
+      }
+    },
+    {
+      "id": "root-cause:cpu-resource-undersizing",
+      "type": "RootCause",
+      "properties": {
+        "id": "root-cause:cpu-resource-undersizing",
+        "description": "CPU resource undersizing causing excessive parallelism and connection pool exhaustion"
+      }
+    },
+    {
+      "id": "code-path:src-payments-handler-py",
+      "type": "CodePath",
+      "properties": {
+        "id": "code-path:src/payments/handler.py",
+        "file_path": "src/payments/handler.py",
+        "functionality": "Handles payments functionality",
+        "original_path": "src/payments/handler.py"
+      }
+    },
+    {
+      "id": "triggered-code-path:unbounded-retries",
+      "type": "TriggeredCodePath",
+      "properties": {
+        "id": "triggered-code-path:unbounded-retries"
+      }
+    },
+    {
+      "id": "error:fetch-wrapper-error",
+      "type": "Error",
+      "properties": {
+        "message": "TypeError"
+      }
+    },
+    {
+      "id": "symptom:downtime",
+      "type": "Symptom",
+      "properties": {
+        "description": "Customer site downtime"
+      }
+    },
+    {
+      "id": "symptom:fetch-failure",
+      "type": "Symptom",
+      "properties": {
+        "description": "Fetch API requests failing"
+      }
+    },
+    {
+      "id": "root-cause:bad-fetch-wrapper",
+      "type": "RootCause",
+      "properties": {
+        "description": "Simplified fetch wrapper not passing on relevant request options"
+      }
+    },
+    {
+      "id": "root-cause:unintended-consequences",
+      "type": "RootCause",
+      "properties": {
+        "description": "Fix attempts causing further issues with FormData"
+      }
+    },
+    {
+      "id": "mitigation:sdk-fix",
+      "type": "Mitigation",
+      "properties": {
+        "description": "Release 1.327.0 with fix for mismatched FormData boundaries"
+      },
+      "edges": [
+        {
+          "source": "root-cause:unintended-consequences",
+          "target": "mitigation:sdk-fix",
+          "type": "touched"
+        }
+      ]
+    },
+    {
+      "id": "mitigation:rollback",
+      "type": "Mitigation",
+      "properties": {
+        "description": "Roll back all recent changes to fetch wrapper"
+      },
+      "edges": [
+        {
+          "source": "root-cause:bad-fetch-wrapper",
+          "target": "mitigation:rollback",
+          "type": "touched"
+        }
+      ]
+    },
+    {
+      "id": "service:posthog-feature-flags-service",
+      "type": "Service",
+      "properties": {
+        "service_name": "posthog-feature-flags-service",
+        "functionality": "Provides feature flag functionality for PostHog application"
+      }
+    },
+    {
+      "id": "error:redis-connection-pool-exhaustion",
+      "type": "Error",
+      "properties": {
+        "description": "Redis connection pool exhausted due to excessive parallelism"
+      }
+    },
+    {
+      "id": "error:cpu-bound-latency",
+      "type": "Error",
+      "properties": {
+        "description": "CPU bound latency causing slow queries"
+      }
+    },
+    {
+      "id": "trigger:deploy-timeout-handling-change",
+      "type": "Trigger",
+      "properties": {
+        "description": "Deploy timeout handling change triggered excessive parallelism"
+      }
+    },
+    {
+      "id": "trigger:rate-limiting-configuration",
+      "type": "Trigger",
+      "properties": {
+        "description": "Rate limiting configuration misconfigured causing 429 errors"
+      }
+    },
+    {
+      "id": "trigger:unrelated-deployment",
+      "type": "Trigger",
+      "properties": {
+        "description": "Unrelated deployment triggered feature flags pod rollout"
+      }
     }
   ],
   "edges": [
-    { "source": "root-cause:missing-db-index-webhook-events", "target": "error:connection-pool-exhaustion-payments", "type": "caused" },
-    { "source": "error:connection-pool-exhaustion-payments", "target": "symptom:order-payment-status-timeout", "type": "manifested_as" },
-    { "source": "service:orders-service", "target": "service:payments-service", "type": "depended_on" },
-    { "source": "incident:PAY-2024-031501", "target": "code-path:src/payments/webhook_handler.py", "type": "touched" },
-    { "source": "incident:PAY-2024-031501", "target": "code-path:src/payments/db/migrations/0042_webhook_events.py", "type": "touched" },
-    { "source": "incident:PAY-2024-031501", "target": "code-path:src/orders/payment_status.py", "type": "touched" },
-    { "source": "mitigation:add-webhook-events-index-2024-03-15", "target": "incident:PAY-2024-031501", "type": "resolved" }
+    {
+      "source": "incident:7efe43803f3e",
+      "target": "service:posthog-js",
+      "type": "caused"
+    },
+    {
+      "source": "service:posthog-js",
+      "target": "error:unreadablestream",
+      "type": "caused"
+    },
+    {
+      "source": "error:unreadablestream",
+      "target": "root-cause:simplistic-fetch-wrapper",
+      "type": "manifested_as"
+    },
+    {
+      "source": "incident:7efe43803f3e",
+      "target": "symptom:fetch-request-failure",
+      "type": "manifested_as"
+    },
+    {
+      "source": "mitigation:fix-1-327-0",
+      "target": "incident:7efe43803f3e",
+      "type": "resolved"
+    },
+    {
+      "source": "mitigation:roll-back-1-328-0",
+      "target": "incident:7efe43803f3e",
+      "type": "resolved"
+    },
+    {
+      "source": "service:cdn",
+      "target": "incident:7efe43803f3e",
+      "type": "touched"
+    },
+    {
+      "source": "service:posthog-js",
+      "target": "code-path:src-replay-fetch-wrapper-ts",
+      "type": "depended_on"
+    },
+    {
+      "source": "incident:3310de46aa7d",
+      "target": "root-cause:cpu-undersizing",
+      "type": "resolved"
+    },
+    {
+      "source": "incident:3310de46aa7d",
+      "target": "symptom:excessive-parallelism",
+      "type": "manifested_as"
+    },
+    {
+      "source": "incident:3310de46aa7d",
+      "target": "symptom:connection-pool-exhaustion",
+      "type": "manifested_as"
+    },
+    {
+      "source": "root-cause:cpu-undersizing",
+      "target": "service:posthog-feature-flags",
+      "type": "caused"
+    },
+    {
+      "source": "symptom:excessive-parallelism",
+      "target": "error:redis-overload",
+      "type": "caused"
+    },
+    {
+      "source": "service:posthog-feature-flags",
+      "target": "code-path:src-posthog-service-feature-flags-py",
+      "type": "touched"
+    },
+    {
+      "source": "service:posthog-feature-flags",
+      "target": "incident:3310de46aa7d",
+      "type": "depended_on"
+    },
+    {
+      "source": "error:redis-overload",
+      "target": "root-cause:cpu-undersizing",
+      "type": "resolved"
+    },
+    {
+      "source": "error:rate-limiting-misconfigured",
+      "target": "root-cause:cpu-undersizing",
+      "type": "resolved"
+    },
+    {
+      "source": "mitigation:cpu-right-sizing",
+      "target": "root-cause:cpu-undersizing",
+      "type": "satisfies"
+    },
+    {
+      "source": "root-cause:cpu-undersizing",
+      "target": "mitigation:cpu-right-sizing",
+      "type": "resolved"
+    },
+    {
+      "source": "incident:7efe43803f3e",
+      "target": "service:posthog-sdk",
+      "type": "touched"
+    },
+    {
+      "source": "incident:7efe43803f3e",
+      "target": "error:typeerror",
+      "type": "caused"
+    },
+    {
+      "source": "error:typeerror",
+      "target": "root-cause:lazy-loaded-fetch-wraper",
+      "type": "manifested_as"
+    },
+    {
+      "source": "incident:7efe43803f3e",
+      "target": "trigger:customer-report",
+      "type": "caused"
+    },
+    {
+      "source": "incident:7efe43803f3e",
+      "target": "symptom:mismatched-form-data",
+      "type": "manifested_as"
+    },
+    {
+      "source": "symptom:mismatched-form-data",
+      "target": "mitigation:rollback-fetch-wrapper",
+      "type": "satisfies"
+    },
+    {
+      "source": "incident:7efe43803f3e",
+      "target": "code-path:src-posthog-js-fetch-wrapper-ts",
+      "type": "touched"
+    },
+    {
+      "source": "incident:3310de46aa7d",
+      "target": "service:posthog-feature-flags",
+      "type": "caused"
+    },
+    {
+      "source": "incident:3310de46aa7d",
+      "target": "error:redis-overload",
+      "type": "caused"
+    },
+    {
+      "source": "incident:3310de46aa7d",
+      "target": "error:connection-pool-exhaustion",
+      "type": "caused"
+    },
+    {
+      "source": "incident:3310de46aa7d",
+      "target": "code-path:src-payments-handler-py",
+      "type": "touched"
+    },
+    {
+      "source": "error:redis-overload",
+      "target": "root-cause:cpu-resource-undersizing",
+      "type": "caused"
+    },
+    {
+      "source": "error:connection-pool-exhaustion",
+      "target": "root-cause:cpu-resource-undersizing",
+      "type": "caused"
+    },
+    {
+      "source": "root-cause:cpu-resource-undersizing",
+      "target": "incident:3310de46aa7d",
+      "type": "satisfies"
+    },
+    {
+      "source": "incident:3310de46aa7d",
+      "target": "mitigation:cpu-right-sizing",
+      "type": "resolved"
+    },
+    {
+      "source": "mitigation:cpu-right-sizing",
+      "target": "root-cause:cpu-resource-undersizing",
+      "type": "satisfies"
+    },
+    {
+      "source": "incident:3310de46aa7d",
+      "target": "error:rate-limiting-misconfiguration",
+      "type": "manifested_as"
+    },
+    {
+      "source": "incident:3310de46aa7d",
+      "target": "triggerring-event:october-24-incident",
+      "type": "manifested_as"
+    },
+    {
+      "source": "triggerring-event:october-24-incident",
+      "target": "error:rate-limiting-misconfiguration",
+      "type": "caused"
+    },
+    {
+      "source": "incident:3310de46aa7d",
+      "target": "triggerring-event:october-28-incident",
+      "type": "manifested_as"
+    },
+    {
+      "source": "triggerring-event:october-28-incident",
+      "target": "error:connection-pool-exhaustion",
+      "type": "caused"
+    },
+    {
+      "source": "incident:7efe43803f3e",
+      "target": "service:posthog-sdk",
+      "type": "caused"
+    },
+    {
+      "source": "incident:7efe43803f3e",
+      "target": "error:fetch-wrapper-error",
+      "type": "manifested_as"
+    },
+    {
+      "source": "incident:7efe43803f3e",
+      "target": "symptom:downtime",
+      "type": "manifested_as"
+    },
+    {
+      "source": "incident:7efe43803f3e",
+      "target": "symptom:fetch-failure",
+      "type": "manifested_as"
+    },
+    {
+      "source": "root-cause:bad-fetch-wrapper",
+      "target": "symptom:downtime",
+      "type": "caused"
+    },
+    {
+      "source": "root-cause:bad-fetch-wrapper",
+      "target": "symptom:fetch-failure",
+      "type": "caused"
+    },
+    {
+      "source": "root-cause:bad-fetch-wrapper",
+      "target": "error:fetch-wrapper-error",
+      "type": "caused"
+    },
+    {
+      "source": "mitigation:rollback",
+      "target": "service:posthog-sdk",
+      "type": "resolved"
+    },
+    {
+      "source": "mitigation:rollback",
+      "target": "incident:7efe43803f3e",
+      "type": "resolved"
+    },
+    {
+      "source": "incident:3310de46aa7d",
+      "target": "service:posthog-feature-flags-service",
+      "type": "caused"
+    },
+    {
+      "source": "incident:3310de46aa7d",
+      "target": "error:redis-connection-pool-exhaustion",
+      "type": "manifested_as"
+    },
+    {
+      "source": "incident:3310de46aa7d",
+      "target": "error:cpu-bound-latency",
+      "type": "manifested_as"
+    },
+    {
+      "source": "root-cause:cpu-resource-undersizing",
+      "target": "symptom:excessive-parallelism",
+      "type": "caused"
+    },
+    {
+      "source": "root-cause:cpu-resource-undersizing",
+      "target": "symptom:connection-pool-exhaustion",
+      "type": "caused"
+    },
+    {
+      "source": "symptom:excessive-parallelism",
+      "target": "mitigation:cpu-right-sizing",
+      "type": "resolved"
+    },
+    {
+      "source": "symptom:connection-pool-exhaustion",
+      "target": "mitigation:cpu-right-sizing",
+      "type": "resolved"
+    },
+    {
+      "source": "code-path:src-payments-handler-py",
+      "target": "incident:3310de46aa7d",
+      "type": "touched"
+    },
+    {
+      "source": "trigger:deploy-timeout-handling-change",
+      "target": "incident:3310de46aa7d",
+      "type": "caused"
+    },
+    {
+      "source": "trigger:rate-limiting-configuration",
+      "target": "incident:3310de46aa7d",
+      "type": "caused"
+    },
+    {
+      "source": "trigger:unrelated-deployment",
+      "target": "incident:3310de46aa7d",
+      "type": "caused"
+    }
   ]
 }

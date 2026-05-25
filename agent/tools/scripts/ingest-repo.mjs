@@ -131,9 +131,14 @@ async function scanForPostMortems(dir, rootDir, found = []) {
 
 // ─── graph merge helpers ──────────────────────────────────────────────────────
 function mergeGraph(base, incoming) {
-  // Normalize all incoming IDs before merging
+  // Normalize all incoming IDs before merging; capture original_path for CodePath nodes
   for (const node of incoming.nodes ?? []) {
+    const rawId = node.id;
     node.id = canonicalId(node.id);
+    if (node.type === 'CodePath' && rawId !== node.id && rawId.startsWith('code-path:')) {
+      node.properties = node.properties ?? {};
+      if (!node.properties.original_path) node.properties.original_path = rawId.slice('code-path:'.length);
+    }
   }
   for (const edge of incoming.edges ?? []) {
     edge.source = canonicalId(edge.source);
@@ -277,6 +282,20 @@ async function main() {
 
   // Normalize any un-canonical IDs written by prior runs
   normalizeGraph(graph);
+
+  // Backfill original_path for existing CodePath nodes that are missing it
+  for (const node of graph.nodes) {
+    if (node.type !== 'CodePath' || node.properties?.original_path) continue;
+    // Some past nodes stored the raw id in properties.id — extract path from it
+    const rawId = node.properties?.id;
+    if (typeof rawId === 'string' && rawId.startsWith('code-path:')) {
+      node.properties.original_path = rawId.slice('code-path:'.length);
+    }
+    // Nodes with properties.path already set get it aliased to original_path
+    if (!node.properties?.original_path && node.properties?.path) {
+      node.properties.original_path = node.properties.path;
+    }
+  }
 
   // Extract ontology from each file
   let nodesCreated = 0;
