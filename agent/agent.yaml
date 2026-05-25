@@ -8,9 +8,10 @@ description: >
 author: afterburn contributors
 license: MIT
 model:
-  preferred: claude-sonnet-4-6
+  preferred: "groq:llama-3.3-70b-versatile"
   fallback:
-    - claude-haiku-4-5-20251001
+    - "anthropic:claude-sonnet-4-5-20250929"
+    - "openai:gpt-4o"
 skills:
   - ingest-incident
   - extract-ontology
