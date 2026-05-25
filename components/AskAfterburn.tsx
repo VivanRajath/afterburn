@@ -9,10 +9,11 @@ interface AskAfterburnProps {
   diff: string;
   onDiffChange: (diff: string) => void;
   onResult: (result: CheckResult) => void;
+  onClear: () => void;
   lastResult: CheckResult | null;
 }
 
-export default function AskAfterburn({ selectedModel, diff, onDiffChange, onResult, lastResult }: AskAfterburnProps) {
+export default function AskAfterburn({ selectedModel, diff, onDiffChange, onResult, onClear, lastResult }: AskAfterburnProps) {
   const [loading, setLoading] = useState(false);
 
   async function loadSample() {
@@ -57,7 +58,7 @@ export default function AskAfterburn({ selectedModel, diff, onDiffChange, onResu
         className="mt-4 w-full border border-slate-300 rounded px-3 py-2 text-xs font-mono text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent resize-none"
       />
 
-      <div className="mt-3 flex gap-2">
+      <div className="mt-3 flex gap-2 flex-wrap">
         <button
           onClick={loadSample}
           className="px-3 py-2 text-xs font-medium border border-slate-300 rounded text-slate-700 hover:bg-slate-50 transition-colors"
@@ -77,6 +78,15 @@ export default function AskAfterburn({ selectedModel, diff, onDiffChange, onResu
           )}
           {loading ? 'Checking…' : 'Check'}
         </button>
+        {lastResult && (
+          <button
+            onClick={onClear}
+            className="px-3 py-2 text-xs font-medium border border-slate-300 rounded text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors flex items-center gap-1"
+          >
+            <span aria-hidden>×</span>
+            Clear
+          </button>
+        )}
       </div>
 
       {hasResult && (

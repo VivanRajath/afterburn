@@ -57,13 +57,13 @@ export async function run({ operation, files }) {
       (!!resolvedEdge && !satisfiesEdge);
 
     return {
-      id,
       touched_paths,
       root_cause_id: causedEdge?.source ?? null,
       resolved_by: resolvedEdge?.source ?? null,
       satisfies: !!satisfiesEdge,
       band_aid_candidate: isBandAid,
       ...node.properties,
+      id,  // always wins — node.properties.id must not override the graph node ID
     };
   });
 

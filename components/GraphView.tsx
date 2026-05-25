@@ -32,9 +32,10 @@ interface GraphViewProps {
   onSelectNode: (id: string | null) => void;
   highlightedNodeIds?: string[];
   diff?: string;
+  staleHighlight?: boolean;
 }
 
-export default function GraphView({ graphData, selectedNodeId, onSelectNode, highlightedNodeIds, diff }: GraphViewProps) {
+export default function GraphView({ graphData, selectedNodeId, onSelectNode, highlightedNodeIds, diff, staleHighlight }: GraphViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [graphWidth, setGraphWidth] = useState(700);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
@@ -76,7 +77,9 @@ export default function GraphView({ graphData, selectedNodeId, onSelectNode, hig
       const isBandAid = node.properties?.band_aid_candidate === true;
       const isHighlighted = highlightSet === null || highlightSet.has(node.id);
 
-      const opacity = isHighlighted ? 1 : 0.25;
+      const opacity = highlightSet === null
+        ? 1
+        : isHighlighted ? (staleHighlight ? 0.5 : 1) : 0.25;
       const size = isHighlighted && highlightSet !== null ? baseSize * 1.2 : baseSize;
 
       ctx.globalAlpha = opacity;
@@ -127,7 +130,7 @@ export default function GraphView({ graphData, selectedNodeId, onSelectNode, hig
         ctx.fillText(label, node.x, node.y + size + 2 / globalScale + pad);
       }
     },
-    [hoveredNodeId, selectedNodeId, highlightSet],
+    [hoveredNodeId, selectedNodeId, highlightSet, staleHighlight],
   );
 
   const bandAidCount = graphData?.nodes.filter(
@@ -231,7 +234,10 @@ export default function GraphView({ graphData, selectedNodeId, onSelectNode, hig
                 const { source, target } = link as { source: string | GraphNode; target: string | GraphNode };
                 const srcId = typeof source === 'string' ? source : source.id;
                 const tgtId = typeof target === 'string' ? target : target.id;
-                return highlightSet.has(srcId) && highlightSet.has(tgtId) ? '#334155' : 'rgba(51,65,85,0.15)';
+                if (highlightSet.has(srcId) && highlightSet.has(tgtId)) {
+                  return staleHighlight ? 'rgba(51,65,85,0.55)' : '#334155';
+                }
+                return 'rgba(51,65,85,0.15)';
               }}
               linkWidth={(link) => {
                 if (!highlightSet) return 1.2;

@@ -17,6 +17,7 @@ export default function Page() {
   const [lastCheckResult, setLastCheckResult] = useState<CheckResult | null>(null);
   const [showStaleBanner, setShowStaleBanner] = useState(false);
   const [diff, setDiff] = useState('');
+  const [staleHighlight, setStaleHighlight] = useState(false);
 
   const handleRepoSuccess = useCallback(async (stats: RepoStats) => {
     setShowStaleBanner(false);
@@ -29,6 +30,25 @@ export default function Page() {
 
   const handleNoResults = useCallback(() => {
     setShowStaleBanner(true);
+  }, []);
+
+  // When diff changes after a check has run, mark highlights as stale
+  const handleDiffChange = useCallback((newDiff: string) => {
+    setDiff(newDiff);
+    setStaleHighlight((prev) => prev || lastCheckResult !== null);
+  }, [lastCheckResult]);
+
+  // New check result resets the stale flag
+  const handleResult = useCallback((result: CheckResult) => {
+    setLastCheckResult(result);
+    setStaleHighlight(false);
+  }, []);
+
+  // Clear resets everything
+  const handleClear = useCallback(() => {
+    setLastCheckResult(null);
+    setDiff('');
+    setStaleHighlight(false);
   }, []);
 
   const hasGraphData = graphData !== null && graphData.nodes.length > 0;
@@ -47,19 +67,28 @@ export default function Page() {
           </div>
         )}
 
+        {staleHighlight && lastCheckResult && (
+          <div className="flex items-center gap-2 rounded border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-700 shadow-sm">
+            <span>↻</span>
+            <span>Diff has changed since last check. Click Check to refresh highlights.</span>
+          </div>
+        )}
+
         <GraphView
           graphData={graphData}
           selectedNodeId={selectedNodeId}
           onSelectNode={setSelectedNodeId}
           highlightedNodeIds={lastCheckResult?.matched_node_ids}
           diff={diff}
+          staleHighlight={staleHighlight}
         />
 
         <AskAfterburn
           selectedModel={selectedModel}
           diff={diff}
-          onDiffChange={setDiff}
-          onResult={setLastCheckResult}
+          onDiffChange={handleDiffChange}
+          onResult={handleResult}
+          onClear={handleClear}
           lastResult={lastCheckResult}
         />
       </main>
